@@ -1,20 +1,25 @@
 import * as THREE from 'three';
-import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 let camera, scene, renderer;
-let object;
+let mesh;
 
 setup();
 
 function setup() {
 
 //Setup the scene, camera, model. Import controls and render the scene
-    camera = new THREE.PerspectiveCamera( 100, window.innerWidth / window.innerHeight, 1, 1000 );
-    camera.position.y = 500;
-    camera.position.z = 100;
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    document.body.appendChild( renderer.domElement );
 
     scene = new THREE.Scene();
+
+    camera = new THREE.PerspectiveCamera( 100, window.innerWidth / window.innerHeight, 1, 1000 );
+    camera.position.set = (10, 10, 10); 
+    camera.lookAt(0, 0, 0);
+
     const ambientLight = new THREE.AmbientLight( 0xcccccc, 0.4 );
     scene.add( ambientLight );
 
@@ -22,33 +27,25 @@ function setup() {
     camera.add( pointLight );
     scene.add( camera );
 
-    const loader = new OBJLoader();
-    loader.load( 
-        "assets/House.obj",
-        function ( obj ) {
-            object = obj;
-            scene.add( object );
-        },
-        function xhr() {
-            console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
-        },
-        function error() {
-            console.log( 'An error happened', error );
+    const loader = new GLTFLoader();
+    loader.load('assets/untitled.glb', (gltf) => {
+        mesh = gltf.scene;
+        mesh.position.set(0, -4, 4);
+        scene.add(mesh);
     });
-
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    document.body.appendChild( renderer.domElement );
 
     const controls = new OrbitControls( camera, renderer.domElement );
 	controls.minDistance = 2;
 	controls.maxDistance = 5;
-	controls.addEventListener( 'change', render );
+	controls.addEventListener( 'change', animate );
+};
 
-    function render() {
-        renderer.render( scene, camera );
-    };
-}
+function animate() {
+    requestAnimationFrame( animate );
+    renderer.render( scene, camera );
+};
+
+animate();
 
 function gameMechanics() {
     // Game mechanics here
