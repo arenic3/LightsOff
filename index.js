@@ -3,63 +3,90 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { PositionalAudioHelper } from 'three/addons/helpers/PositionalAudioHelper.js';
+import gsap from'gsap';
 
-let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisHelper, listener;
+let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisHelper, listener, sound;
 let mesh;
 
-setup();
+document.getElementById('startButton').addEventListener('click', ()=> {
+    document.getElementById('controls').style.display= 'none';
+    document.getElementById('subT').style.display= 'none';
+    document.getElementById('sceneContainer').style.display = 'block';
+    document.getElementById('startButton').style.display = 'none';
+    setup();
+    transAnimation();
+});
+
 
 function setup() {
-
     //Setup the scene, camera, model. Import controls and render the scene;
+    initRenderer();
+    initScene();
+    initAudio();
+    initLights();
+    initControls();
+    initMesh();
+    initGUI();
+    animate();
+}
+
+function initRenderer() {
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+    document.getElementById('sceneContainer').appendChild(renderer.domElement);
     
     renderer.shadowMap.enabled = true;
 	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 	renderer.toneMapping = THREE.ACESFilmicToneMapping;
 	renderer.toneMappingExposure = 1;
+}
 
+function initScene() {
     scene = new THREE.Scene();
-    
+
     camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 0.1, 150 );
     camera.position.set(-15, 15, 15);
-    
+    scene.add( camera );
+
+    axisHelper = new THREE.AxesHelper( 10 );
+    //scene.add( axisHelper);
+}
+
+function initAudio() {
     listener = new THREE.AudioListener();
     camera.add(listener);
 
-    const sound = new THREE.PositionalAudio( listener );
+    sound = new THREE.PositionalAudio( listener );
     
     const audioLoader = new THREE.AudioLoader();
     audioLoader.load( 'assets/STATIC.mp3', function( buffer ) {
         sound.setBuffer( buffer );
-        sound.setRefDistance( 20 );
-        sound.setDirectionalCone( 80, 200, 1 );
+        sound.setVolume(1);
+        sound.setRefDistance(2);
+        sound.setRolloffFactor(5);
         sound.loop = true;
         sound.play();
     });
 
-    const posSoundHelper = new PositionalAudioHelper( sound );
-    sound.add( posSoundHelper );
+    listener.context.resume();
 
+    const posSoundHelper = new PositionalAudioHelper( sound );
+    //sound.add( posSoundHelper );
+}
+
+function initLights() {
     const ambientLight = new THREE.AmbientLight( 0xcccccc, 0.9 );
     ambientLight.position.set(2.6, -2, 2.4);
     //scene.add( ambientLight );
 
-    const soundObj = new THREE.Object3D();
-    soundObj.position.set(-14, 14, 14);
-    scene.add(soundObj);
-
     const pointLight = new THREE.PointLight( 0xffffff, 0.9 );
     pointLight.position.set(-1.6, -1.3, 0.6);
     scene.add( pointLight );
-    soundObj.add(sound);
-    scene.add( camera );
+    
 
     const pointLightHelper = new THREE.PointLightHelper( pointLight , 0.5 );
-    scene.add( pointLightHelper);
+    //scene.add( pointLightHelper);
 
     const spotLightCol = new THREE.Color( "rgb(240, 165, 70)" );
 
@@ -86,29 +113,10 @@ function setup() {
     scene.add(spotTarget);
 
     lightHelper = new THREE.SpotLightHelper( spotLight );
-	scene.add( lightHelper );
+	//scene.add( lightHelper );
+}
 
-    axisHelper = new THREE.AxesHelper( 10 );
-    scene.add( axisHelper);
-
-    const loader = new GLTFLoader();
-    loader.load('assets/house.glb', (gltf) => {
-        mesh = gltf.scene;
-        mesh.position.set(0, -4, 0);
-        mesh.receiveShadow = true;
-
-        scene.add(mesh);
-    });
-
-    const plane = new THREE.PlaneGeometry(8, 8);
-    const material = new THREE.MeshLambertMaterial( { color: 0x08082 } );
-    const mesh2 = new THREE.Mesh(plane, material);
-    mesh2.receiveShadow = true;
-    mesh2.castShadow = true;
-    mesh2.rotation.x = - Math.PI / 2;
-    mesh2.position.set(0, -4, 0);
-    scene.add(mesh2);
-
+function initControls() {
     controls = new OrbitControls(camera, renderer.domElement);
     controls.minDistance = 4;
     controls.maxDistance = 140;
@@ -119,72 +127,99 @@ function setup() {
     controls.update();
 }
 
-const gui = new GUI();
+function initMesh() {
+    const loader = new GLTFLoader();
+    loader.load('assets/house.glb', (gltf) => {
+        mesh = gltf.scene;
+        mesh.position.set(0, -4, 0);
+        mesh.receiveShadow = true;
 
-const params = {
-    color: spotLight.color.getHex(),
-    intensity: spotLight.intensity,
-    distance: spotLight.distance,
-    angle: spotLight.angle,
-    penumbra: spotLight.penumbra,
-    decay: spotLight.decay,
-    x: spotLight.position.x,
-    y: spotLight.position.y,
-    z: spotLight.position.z,
-};
-
-gui.addColor( params, 'color' ).onChange( function ( val ) {
-
-    spotLight.color.setHex( val );
-
-} );
-
-gui.add( params, 'intensity', 0, 500 ).onChange( function ( val ) {
-
-    spotLight.intensity = val;
-
-} );
+        scene.add(mesh);
+    });
+    
+    const soundObj = new THREE.Object3D();
+    soundObj.position.set(-1.6, -1.3, 0.6);
+    scene.add(soundObj);
+    soundObj.add(sound);
 
 
-gui.add( params, 'distance', -10, 50 ).onChange( function ( val ) {
+    const plane = new THREE.PlaneGeometry(8, 8);
+    const material = new THREE.MeshLambertMaterial( { color: 0x08082 } );
+    const mesh2 = new THREE.Mesh(plane, material);
+    mesh2.receiveShadow = true;
+    mesh2.castShadow = true;
+    mesh2.rotation.x = - Math.PI / 2;
+    mesh2.position.set(0, -4, 0);
+    //scene.add(mesh2);
+}
 
-    spotLight.distance = val;
 
-} );
+function initGUI() {
+    const gui = new GUI();
 
-gui.add( params, 'angle', 0, Math.PI / 3 ).onChange( function ( val ) {
-
-    spotLight.angle = val;
-
-} );
-
-gui.add( params, 'penumbra', 0, 1 ).onChange( function ( val ) {
-
-    spotLight.penumbra = val;
-
-} );
-
-gui.add( params, 'decay', 1, 2 ).onChange( function ( val ) {
-
-    spotLight.decay = val;
-
-} );
-
-gui.add( params, 'x', -20, 20).onChange( function ( val ){
-
-    spotLight.position.x = val;
-});
-
-gui.add( params, 'y', -20, 20).onChange( function ( val ){
-
-    spotLight.position.y = val;
-});
-
-gui.add( params, 'z', -20, 20).onChange( function ( val ){
-
-    spotLight.position.z = val;
-});
-
+    const params = {
+        color: spotLight.color.getHex(),
+        intensity: spotLight.intensity,
+        distance: spotLight.distance,
+        angle: spotLight.angle,
+        penumbra: spotLight.penumbra,
+        decay: spotLight.decay,
+        x: spotLight.position.x,
+        y: spotLight.position.y,
+        z: spotLight.position.z,
+    };
+    
+    gui.addColor( params, 'color' ).onChange( function ( val ) {
+    
+        spotLight.color.setHex( val );
+    
+    } );
+    
+    gui.add( params, 'intensity', 0, 500 ).onChange( function ( val ) {
+    
+        spotLight.intensity = val;
+    
+    } );
+    
+    gui.add( params, 'distance', -10, 50 ).onChange( function ( val ) {
+    
+        spotLight.distance = val;
+    
+    } );
+    
+    gui.add( params, 'angle', 0, Math.PI / 3 ).onChange( function ( val ) {
+    
+        spotLight.angle = val;
+    
+    } );
+    
+    gui.add( params, 'penumbra', 0, 1 ).onChange( function ( val ) {
+    
+        spotLight.penumbra = val;
+    
+    } );
+    
+    gui.add( params, 'decay', 1, 2 ).onChange( function ( val ) {
+    
+        spotLight.decay = val;
+    
+    } );
+    
+    gui.add( params, 'x', -20, 20).onChange( function ( val ){
+    
+        spotLight.position.x = val;
+    });
+    
+    gui.add( params, 'y', -20, 20).onChange( function ( val ){
+    
+        spotLight.position.y = val;
+    });
+    
+    gui.add( params, 'z', -20, 20).onChange( function ( val ){
+    
+        spotLight.position.z = val;
+    });
+}
 
 //document.addEventListener('keydown', onDocumentKeyDown);
 window.addEventListener('resize', onWindowResize);
@@ -213,13 +248,55 @@ function onWindowResize(){
 //     }
 // }
 
+function transAnimation() {
+    controls.enableRotate = false;
+    controls.enableZoom = false;
+
+    var tl = gsap.timeline({repeat: 0, repeatDelay: 0});
+
+    tl.to(camera.position, {
+        delay: 1/3,
+        x: 14,
+        y: 15,
+        z: 14,
+        duration: 2,
+        ease: "slow"
+    });
+
+    tl.to(camera.position, {
+        x: 14,
+        y: 9,
+        z: -14,
+        duration: 1,
+        ease: "sine"
+    });
+
+    tl.to(camera.position, {
+        x: -14,
+        y: 2,
+        z: -14,
+        duration: 2,
+        ease: "slow"
+    });
+
+    tl.to(camera.position, {
+        x: -14,
+        y: 15,
+        z: 14,
+        duration: 2,
+        ease: "power4"
+    });
+}
+
 function animate() {
+    controls.enableRotate = true;
+    controls.enableZoom = true;
     controls.update();
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
     lightHelper.update();
+    //console.log(listener);
 }
-animate();
 
 function gameLoop() {
     // Game mechanics here

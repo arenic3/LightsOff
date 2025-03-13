@@ -8,9 +8,17 @@
 </head>
 <body>
     <div id="heading">
-        º<h1>Lights Off!</h1>
-        <p>Click on the lights to turn them off</p>
+        <h1>Lights Off!</h1>
+        <p id="subT">Get ready!</p>
+        <button id="startButton">Start!</button>
+        <img id="controls" src="assets/guiInstructions.jpg" alt="control diagram">
     </div> 
-    <script id="scene" type="module" src="/index.js"></script>
+
+    <!-- <div id="controlsContainer">
+    </div> -->
+ 
+    <div id="sceneContainer" style="display: none;">
+        <script id="scene" type="module" src="/index.js"></script>
+    </div>
 </body>
 </html>
