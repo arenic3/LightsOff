@@ -5,8 +5,13 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { PositionalAudioHelper } from 'three/addons/helpers/PositionalAudioHelper.js';
 import gsap from'gsap';
 
-let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisHelper, listener, sound;
+let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisHelper, audioLoader, listener, sound;
 let mesh;
+
+let objects = [
+    {x: -1.6, y: -1.3, z: 0.6, sound: 'assets/STATIC.mp3'},
+    {}
+]
 
 document.getElementById('startButton').addEventListener('click', ()=> {
     document.getElementById('controls').style.display= 'none';
@@ -28,6 +33,7 @@ function setup() {
     initMesh();
     initGUI();
     animate();
+    gameMech();
 }
 
 function initRenderer() {
@@ -59,20 +65,9 @@ function initAudio() {
 
     sound = new THREE.PositionalAudio( listener );
     
-    const audioLoader = new THREE.AudioLoader();
-    audioLoader.load( 'assets/STATIC.mp3', function( buffer ) {
-        sound.setBuffer( buffer );
-        sound.setVolume(1);
-        sound.setRefDistance(2);
-        sound.setRolloffFactor(5);
-        sound.loop = true;
-        sound.play();
-    });
+    audioLoader = new THREE.AudioLoader();
 
     listener.context.resume();
-
-    const posSoundHelper = new PositionalAudioHelper( sound );
-    //sound.add( posSoundHelper );
 }
 
 function initLights() {
@@ -137,10 +132,10 @@ function initMesh() {
         scene.add(mesh);
     });
     
-    const soundObj = new THREE.Object3D();
-    soundObj.position.set(-1.6, -1.3, 0.6);
-    scene.add(soundObj);
-    soundObj.add(sound);
+    // const soundObj = new THREE.Object3D();
+    // soundObj.position.set(-1.6, -1.3, 0.6);
+    // scene.add(soundObj);
+    // soundObj.add(sound);
 
 
     const plane = new THREE.PlaneGeometry(8, 8);
@@ -221,7 +216,6 @@ function initGUI() {
     });
 }
 
-//document.addEventListener('keydown', onDocumentKeyDown);
 window.addEventListener('resize', onWindowResize);
 
 function onWindowResize(){
@@ -229,24 +223,6 @@ function onWindowResize(){
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight)
 }
-
-// function onDocumentKeyDown(event) {
-//     var keyCode = event.which;
-//     switch (keyCode) {
-//         case 37: // left arrow key
-//             mesh.rotation.y += 0.01;
-//             break;
-//         case 39: // right arrow key
-//             mesh.rotation.y -= 0.01;
-//             break;
-//         case 38: // up arrow key
-//             mesh.rotation.x += 0.01;
-//             break;
-//         case 40: // down arrow key
-//             mesh.rotation.x -= 0.01;
-//             break;
-//     }
-// }
 
 function transAnimation() {
     controls.enableRotate = false;
@@ -299,16 +275,27 @@ function animate() {
 }
 
 function gameLoop() {
-    // Game mechanics here
+    let timer = setInterval(gameMech, 5000);
 
 }
 
-function eventTimer(){
-    //Set intervals for events to go off -> ramp with time
+function gameMech() {
+    //generate light & sound object at specified positions within the scene
+    const loight = new THREE.PointLight( 0xffffff, 0.9 );
+    const sssoundObj = new THREE.Object3D();
 
-}
+    loight.position.set(objects[0].x, objects[0].y, objects[0].z);
+    sssoundObj.position.set(objects[0].x, objects[0].y, objects[0].z);
 
-function toggleEvent(){
-    //Set off light & sound components
+    audioLoader.load( objects[0].sound, function( buffer ) {
+        sound.setBuffer( buffer );
+        sound.setVolume(1);
+        sound.setRefDistance(2);
+        sound.setRolloffFactor(5);
+        sound.loop = true;
+        sound.play();
+    });
 
+    const posSoundHelper = new PositionalAudioHelper( sound );
+    sound.add( posSoundHelper );
 }
