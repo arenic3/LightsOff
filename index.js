@@ -9,7 +9,7 @@ let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisH
 let mesh;
 
 let objects = [
-    {x: -1.6, y: -1.3, z: 0.6, sound: 'assets/STATIC.mp3'},
+    {x: -1.5, y: -1.3, z: 0.6, sound: 'assets/STATIC.mp3'},
     {}
 ]
 
@@ -19,7 +19,7 @@ document.getElementById('startButton').addEventListener('click', ()=> {
     document.getElementById('sceneContainer').style.display = 'block';
     document.getElementById('startButton').style.display = 'none';
     setup();
-    transAnimation();
+    //transAnimation();
 });
 
 
@@ -56,7 +56,7 @@ function initScene() {
     scene.add( camera );
 
     axisHelper = new THREE.AxesHelper( 10 );
-    //scene.add( axisHelper);
+    scene.add( axisHelper);
 }
 
 function initAudio() {
@@ -75,12 +75,12 @@ function initLights() {
     ambientLight.position.set(2.6, -2, 2.4);
     //scene.add( ambientLight );
 
-    const pointLight = new THREE.PointLight( 0xffffff, 0.9 );
-    pointLight.position.set(-1.6, -1.3, 0.6);
-    scene.add( pointLight );
+    //const pointLight = new THREE.PointLight( 0xffffff, 0.9 );
+    //pointLight.position.set(-1.6, -1.3, 0.6);
+    //scene.add( pointLight );
     
 
-    const pointLightHelper = new THREE.PointLightHelper( pointLight , 0.5 );
+    //const pointLightHelper = new THREE.PointLightHelper( pointLight , 0.5 );
     //scene.add( pointLightHelper);
 
     const spotLightCol = new THREE.Color( "rgb(240, 165, 70)" );
@@ -131,12 +131,6 @@ function initMesh() {
 
         scene.add(mesh);
     });
-    
-    // const soundObj = new THREE.Object3D();
-    // soundObj.position.set(-1.6, -1.3, 0.6);
-    // scene.add(soundObj);
-    // soundObj.add(sound);
-
 
     const plane = new THREE.PlaneGeometry(8, 8);
     const material = new THREE.MeshLambertMaterial( { color: 0x08082 } );
@@ -271,7 +265,6 @@ function animate() {
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
     lightHelper.update();
-    //console.log(listener);
 }
 
 function gameLoop() {
@@ -290,12 +283,39 @@ function gameMech() {
     audioLoader.load( objects[0].sound, function( buffer ) {
         sound.setBuffer( buffer );
         sound.setVolume(1);
-        sound.setRefDistance(2);
+        sound.setRefDistance(1);
         sound.setRolloffFactor(5);
+        //sound.setDirectionalCone(10, 30, 0.1);
         sound.loop = true;
         sound.play();
     });
 
-    const posSoundHelper = new PositionalAudioHelper( sound );
+    const posSoundHelper = new PositionalAudioHelper( sound, 0.5 );
     sound.add( posSoundHelper );
+    posSoundHelper.update();
+
+    sssoundObj.add(sound);
+    scene.add(loight);
+    scene.add(sssoundObj);
+
+    // const raycaster = new THREE.Raycaster();
+    // const mouse = new THREE.Vector2();
+
+    // function onMouseClick(event){
+    //     mouse.x = (event.clientX / window.innerWidth) * 2 -1;
+    //     mouse.y = -(event.clientY / window.innerHeight) * 2 -1;
+
+    //     raycaster.setFromCamera(mouse, camera);
+    //     const intersects = raycaster.intersectObjects([sssoundObj], true);
+
+    //     if(intersects.length > 0){
+    //         const obj = intersects[0].object;
+    //         if(obj === sssoundObj){
+    //             sound.stop();
+    //             loight.visible = false;
+    //         }
+    //     }
+    // }
+
+    window.addEventListener('click', onMouseClick, false);
 }
