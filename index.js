@@ -132,14 +132,12 @@ function initMesh() {
         scene.add(mesh);
     });
 
-    const plane = new THREE.PlaneGeometry(8, 8);
-    const material = new THREE.MeshLambertMaterial( { color: 0x08082 } );
-    const mesh2 = new THREE.Mesh(plane, material);
-    mesh2.receiveShadow = true;
-    mesh2.castShadow = true;
-    mesh2.rotation.x = - Math.PI / 2;
-    mesh2.position.set(0, -4, 0);
-    //scene.add(mesh2);
+    // const wallGeometry = new THREE.BoxGeometry( 2, 1, 0.1 );
+	// const wallMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, transparent: true, opacity: 0.5 } );
+	// const wall = new THREE.Mesh( wallGeometry, wallMaterial );
+    // wall.rotation.set(0, 55, 0);
+    // wall.position.set(-10.5, -1.3, 0.6);
+    // scene.add(wall);
 }
 
 
@@ -275,47 +273,50 @@ function gameLoop() {
 function gameMech() {
     //generate light & sound object at specified positions within the scene
     const loight = new THREE.PointLight( 0xffffff, 0.9 );
-    const sssoundObj = new THREE.Object3D();
+    const ssoundObj = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+    const mat = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0.5});
+
+    const sssoundObj = new THREE.Mesh(ssoundObj, mat);
 
     loight.position.set(objects[0].x, objects[0].y, objects[0].z);
     sssoundObj.position.set(objects[0].x, objects[0].y, objects[0].z);
 
     audioLoader.load( objects[0].sound, function( buffer ) {
         sound.setBuffer( buffer );
-        sound.setVolume(1);
         sound.setRefDistance(1);
-        sound.setRolloffFactor(5);
-        //sound.setDirectionalCone(10, 30, 0.1);
         sound.loop = true;
         sound.play();
     });
 
-    const posSoundHelper = new PositionalAudioHelper( sound, 0.5 );
-    sound.add( posSoundHelper );
-    posSoundHelper.update();
+    sound.setDirectionalCone(140, 180, 0.1);
 
+    const posSoundHelper = new PositionalAudioHelper( sound, 1 );
+    sound.add( posSoundHelper );
+
+    sssoundObj.rotation.set(0, -55, 0);
     sssoundObj.add(sound);
     scene.add(loight);
     scene.add(sssoundObj);
 
-    // const raycaster = new THREE.Raycaster();
-    // const mouse = new THREE.Vector2();
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
 
-    // function onMouseClick(event){
-    //     mouse.x = (event.clientX / window.innerWidth) * 2 -1;
-    //     mouse.y = -(event.clientY / window.innerHeight) * 2 -1;
+    function onMouseClick(event){
+        mouse.x = (event.clientX / window.innerWidth) * 2 -1;
+        mouse.y = -((event.clientY / window.innerHeight) * 2 -1);
 
-    //     raycaster.setFromCamera(mouse, camera);
-    //     const intersects = raycaster.intersectObjects([sssoundObj], true);
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects([sssoundObj], false);
 
-    //     if(intersects.length > 0){
-    //         const obj = intersects[0].object;
-    //         if(obj === sssoundObj){
-    //             sound.stop();
-    //             loight.visible = false;
-    //         }
-    //     }
-    // }
+        if(intersects.length > 0){
+            console.log("clicked");
+            const obj = intersects[0].object;
+            if(obj === sssoundObj){
+                sound.stop();
+                loight.visible = false;
+            }
+        }
+    }
 
     window.addEventListener('click', onMouseClick, false);
 }
