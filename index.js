@@ -9,9 +9,9 @@ let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisH
 let mesh;
 
 let objects = [
-    {x: -1.5, y: -1.3, z: 0.6, sound: 'assets/STATIC.mp3'},
-    {x: 0.9, y: -1.6, z: 0.25, sound: 'assets/LAMP.mp3'},
-    {}
+    {x: -1.5, y: -1.3, z: 0.6, sound: 'assets/STATIC.mp3', created: false},
+    {x: 0.9, y: -1.6, z: 0.25, sound: 'assets/LAMP.mp3', created: false},
+    {x: -0.1, y: -3.2, z: -1.15, sound: 'assets/FAUCET.mp3', created: false},
 ]
 
 document.getElementById('startButton').addEventListener('click', ()=> {
@@ -32,7 +32,7 @@ function setup() {
     initLights();
     initControls();
     initMesh();
-    initGUI();
+    //initGUI();
     animate();
     gameLoop();
 }
@@ -57,7 +57,7 @@ function initScene() {
     scene.add( camera );
 
     axisHelper = new THREE.AxesHelper( 10 );
-    scene.add( axisHelper);
+    //scene.add( axisHelper);
 }
 
 function initAudio() {
@@ -267,44 +267,49 @@ function animate() {
 }
 
 function gameLoop() {
-    let timer = setInterval(gameMech, 3500);
+    let timer
 
-    if(!sound.isPlaying){
-        timer;
-    } else {
+    if(timer){
         clearInterval(timer);
     }
+    timer = setInterval(gameMech, 3500);
 }
 
 function gameMech() {
     //generate light & sound object at specified positions within the scene
-    const obx = Math.floor(Math.random(0, objects.length));
-
+    const uncreatedObjects = objects.filter(obj => !objects.created);
     const loight = new THREE.PointLight( 0xffffff, 0.9 );
-    const ssoundObj = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-    const mat = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0.5});
+    const ssoundObj = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+    const mat = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0});
 
     const sssoundObj = new THREE.Mesh(ssoundObj, mat);
 
-    loight.position.set(objects[1].x, objects[1].y, objects[1].z);
-    sssoundObj.position.set(objects[1].x, objects[1].y, objects[1].z);
+    if(uncreatedObjects.length > 0){
+        const obx = Math.floor(Math.random()* objects.length);
+        const obj = uncreatedObjects[obx];
 
-    audioLoader.load( objects[1].sound, function( buffer ) {
-        sound.setBuffer( buffer );
-        sound.setRefDistance(1);
-        sound.loop = true;
-        sound.play();
-    });
+        loight.position.set(obj.x, obj.y, obj.z);
+        sssoundObj.position.set(obj.x, obj.y, obj.z);
 
-    sound.setDirectionalCone(140, 180, 0.1);
+        audioLoader.load( obj.sound, function( buffer ) {
+            sound.setBuffer( buffer );
+            sound.setRefDistance(1);
+            sound.loop = true;
+            sound.play();
+        });
 
-    const posSoundHelper = new PositionalAudioHelper( sound, 1 );
-    sound.add( posSoundHelper );
+        sound.setDirectionalCone(140, 180, 0.1);
 
-    sssoundObj.rotation.set(0, -55, 0);
-    sssoundObj.add(sound);
-    scene.add(loight);
-    scene.add(sssoundObj);
+        const posSoundHelper = new PositionalAudioHelper( sound, 1 );
+        sound.add( posSoundHelper );
+
+        sssoundObj.rotation.set(0, -55, 0);
+        sssoundObj.add(sound);
+        scene.add(loight);
+        scene.add(sssoundObj);
+
+        obj.created = true;
+    }
 
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
