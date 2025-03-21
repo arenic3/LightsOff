@@ -10,6 +10,7 @@ let mesh;
 
 let objects = [
     {x: -1.5, y: -1.3, z: 0.6, sound: 'assets/STATIC.mp3'},
+    {x: 0.9, y: -1.6, z: 0.25, sound: 'assets/LAMP.mp3'},
     {}
 ]
 
@@ -19,7 +20,7 @@ document.getElementById('startButton').addEventListener('click', ()=> {
     document.getElementById('sceneContainer').style.display = 'block';
     document.getElementById('startButton').style.display = 'none';
     setup();
-    //transAnimation();
+    transAnimation();
 });
 
 
@@ -33,7 +34,7 @@ function setup() {
     initMesh();
     initGUI();
     animate();
-    gameMech();
+    gameLoop();
 }
 
 function initRenderer() {
@@ -233,7 +234,7 @@ function transAnimation() {
 
     tl.to(camera.position, {
         x: 14,
-        y: 9,
+        y: 6,
         z: -14,
         duration: 1,
         ease: "sine"
@@ -266,22 +267,29 @@ function animate() {
 }
 
 function gameLoop() {
-    let timer = setInterval(gameMech, 5000);
+    let timer = setInterval(gameMech, 3500);
 
+    if(!sound.isPlaying){
+        timer;
+    } else {
+        clearInterval(timer);
+    }
 }
 
 function gameMech() {
     //generate light & sound object at specified positions within the scene
+    const obx = Math.floor(Math.random(0, objects.length));
+
     const loight = new THREE.PointLight( 0xffffff, 0.9 );
     const ssoundObj = new THREE.BoxGeometry(0.5, 0.5, 0.5);
     const mat = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0.5});
 
     const sssoundObj = new THREE.Mesh(ssoundObj, mat);
 
-    loight.position.set(objects[0].x, objects[0].y, objects[0].z);
-    sssoundObj.position.set(objects[0].x, objects[0].y, objects[0].z);
+    loight.position.set(objects[1].x, objects[1].y, objects[1].z);
+    sssoundObj.position.set(objects[1].x, objects[1].y, objects[1].z);
 
-    audioLoader.load( objects[0].sound, function( buffer ) {
+    audioLoader.load( objects[1].sound, function( buffer ) {
         sound.setBuffer( buffer );
         sound.setRefDistance(1);
         sound.loop = true;
