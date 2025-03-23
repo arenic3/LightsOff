@@ -9,9 +9,14 @@ let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisH
 let mesh;
 
 let objects = [
-    {x: -1.5, y: -1.3, z: 0.6, sound: 'assets/STATIC.mp3', created: false},
+    {x: -1.5, y: -1.3, z: 0.6, created: false},
     {x: 0.9, y: -1.6, z: 0.25, sound: 'assets/LAMP.mp3', created: false},
     {x: -0.1, y: -3.2, z: -1.15, sound: 'assets/FAUCET.mp3', created: false},
+]
+
+let sounds = [
+    {sound: 'assets/STATIC.mp3'},
+
 ]
 
 document.getElementById('startButton').addEventListener('click', ()=> {
@@ -64,6 +69,9 @@ function initAudio() {
     listener = new THREE.AudioListener();
     camera.add(listener);
 
+    for(i = 0; i < objects.length; i++){
+        
+    }
     sound = new THREE.PositionalAudio( listener );
     
     audioLoader = new THREE.AudioLoader();
