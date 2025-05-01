@@ -5,7 +5,7 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { PositionalAudioHelper } from 'three/addons/helpers/PositionalAudioHelper.js';
 import gsap from'gsap';
 
-let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisHelper, audioLoader, listener, sound;
+let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisHelper, audioLoader, listener, newSound;
 let mesh;
 
 let objects = [
@@ -14,13 +14,20 @@ let objects = [
     {x: -0.1, y: -3.2, z: -1.15, sound: 'assets/FAUCET.mp3', created: false},
 ]
 
+let scene_objects = [/*(sound, light1),
+    (sound2, light2),
+    (sound3, light3), 
+    (sound4, light4),
+    (sound5, light5)*/
+]
+
 let sounds = [
     {sound: 'assets/STATIC.mp3'},
 
 ]
 
 document.getElementById('startButton').addEventListener('click', ()=> {
-    document.getElementById('controls').style.display= 'none';
+    //document.getElementById('controls').style.display= 'none';
     document.getElementById('subT').style.display= 'none';
     document.getElementById('sceneContainer').style.display = 'block';
     document.getElementById('startButton').style.display = 'none';
@@ -69,10 +76,9 @@ function initAudio() {
     listener = new THREE.AudioListener();
     camera.add(listener);
 
-    for(i = 0; i < objects.length; i++){
+    // for(i = 0; i < objects.length; i++){
         
-    }
-    sound = new THREE.PositionalAudio( listener );
+    // }
     
     audioLoader = new THREE.AudioLoader();
 
@@ -139,6 +145,8 @@ function initMesh() {
         mesh.receiveShadow = true;
 
         scene.add(mesh);
+
+        scene_objects.push(mesh);
     });
 
     // const wallGeometry = new THREE.BoxGeometry( 2, 1, 0.1 );
@@ -283,8 +291,10 @@ function gameLoop() {
     timer = setInterval(gameMech, 3500);
 }
 
-function gameMech() {
-    //generate light & sound object at specified positions within the scene
+function gameMech() {               
+    //generate light & sound object at specified positions within the sceeeene
+    const activeSounds = [];
+
     const uncreatedObjects = objects.filter(obj => !objects.created);
     const loight = new THREE.PointLight( 0xffffff, 0.9 );
     const ssoundObj = new THREE.BoxGeometry(0.1, 0.1, 0.1);
@@ -299,22 +309,29 @@ function gameMech() {
         loight.position.set(obj.x, obj.y, obj.z);
         sssoundObj.position.set(obj.x, obj.y, obj.z);
 
+        newSound = new THREE.PositionalAudio( listener );
+
         audioLoader.load( obj.sound, function( buffer ) {
-            sound.setBuffer( buffer );
-            sound.setRefDistance(1);
-            sound.loop = true;
-            sound.play();
+            newSound.setBuffer( buffer );
+            newSound.setRefDistance(1);
+            newSound.loop = true;
+            newSound.play();
         });
 
-        sound.setDirectionalCone(140, 180, 0.1);
+        newSound.setDirectionalCone(140, 180, 0.1);
 
-        const posSoundHelper = new PositionalAudioHelper( sound, 1 );
-        sound.add( posSoundHelper );
+        const posSoundHelper = new PositionalAudioHelper( newSound, 1 );
+        newSound.add( posSoundHelper );
 
         sssoundObj.rotation.set(0, -55, 0);
-        sssoundObj.add(sound);
+        sssoundObj.add(newSound);
         scene.add(loight);
         scene.add(sssoundObj);
+
+        scene_objects.push(loight);
+        scene_objects.push(sssoundObj)
+
+        activeSounds.push(newSound);
 
         obj.created = true;
     }
@@ -333,7 +350,7 @@ function gameMech() {
             console.log("clicked");
             const obj = intersects[0].object;
             if(obj === sssoundObj){
-                sound.stop();
+                activeSounds[0].stop();
                 loight.visible = false;
             }
         }
