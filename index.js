@@ -21,11 +21,6 @@ let scene_objects = [/*(sound, light1),
     (sound5, light5)*/
 ]
 
-let sounds = [
-    {sound: 'assets/STATIC.mp3'},
-
-]
-
 document.getElementById('startButton').addEventListener('click', ()=> {
     //document.getElementById('controls').style.display= 'none';
     document.getElementById('subT').style.display= 'none';
