@@ -1,23 +1,44 @@
 body {
-    background-color: black;
-    margin: 0;
-    font-family: 'SF Distant Galaxy';
-  }
+  background-color: #251b34;
+  margin: 0;
+  display: grid;;
+  font-family: 'SF Distant Galaxy';
+  place-items: center;
+}
+
+body.on {
+  background-color: #5f4784;
+  transition: background-color 0.5s ease;
+}
+
+body.on #heading {
+  background-color: rgb(208, 61, 61);
+  transition: background-color 0.5s ease;
+}
   
+body.on #startButton {
+  pointer-events: auto;
+  --c: #000;
+  background: linear-gradient(90deg, #0000 33%, #0005, #0000 67%) var(--_p,100%)/300% no-repeat,
+  #e0e0e0;
+  color: #000;
+  transition: background 0.5s ease, color 0.5s ease;
+}
+
 #heading {
-    display: block;
-    position: fixed;
-    width: 100%;
-    padding: 32px;
-    color: rgb(215, 215, 215);
-  }
+  background-color: rgb(42, 22, 22);
+  display: block;
+  position: fixed;
+  width: 100%;
+  color: rgb(37, 35, 19);
+}
   
 h1 {
-    color: rgb(215, 215, 215);
-    font-size: 4em;
-    margin: 0px;
-    font-weight: 100;
-  }
+  color: rgb(37, 35, 19);
+  font-size: 4em;
+  margin: 10px;
+  font-weight: 100;
+}
 
 #controls {
   width: 20%;
@@ -27,13 +48,14 @@ h1 {
 }
 
 #startButton {
+  pointer-events: none;
   position: absolute;
   left: 45%;
-  top: 230%;
+  top: 400%;
 
-  --c: #fff;
+  --c: #1d1d1d;
   background: linear-gradient(90deg, #0000 33%, #fff5, #0000 67%) var(--_p,100%)/300% no-repeat,
-    #4c4949;
+    #0f0e0e;
   color: #0000;
   border: none;
   transform: perspective(500px) rotateY(calc(20deg*var(--_i,-1)));
@@ -62,4 +84,63 @@ h1 {
   margin: 0;
   cursor: pointer;
   padding: .1em .3em;
+}
+
+.bulb {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  top: 200px;
+  right: 38px;
+  background-color: #37321f;
+  border-radius: 100%;
+  z-index: 200;
+  cursor: pointer;
+}
+
+.bulb::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  left: 22.5px;
+  width: 35px;
+  height: 80px;
+  background-color: #37321f;
+  border-radius: 10px;
+  z-index: 300;
+  border-top: 30px solid #000;
+}
+
+.wire {
+  width: 4px;
+  height: calc(50% - 310px);
+  position: absolute;
+  background-color: #000;
+  z-index: 100;
+  top: 0;
+  right: calc(50% - 150px);;
+}
+
+body.on .bulb {
+  background-color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 50px #fff, 0 0 100px #fff, 0 0 150px #fff, 0 0 200px #fff, 0 0 250px #fff, 0 0 300px #fff, 0 0 350px #fff;
+  z-index: 2;;
+}
+
+body.on .bulb::before {
+  background-color: #fff;
+}
+
+body.on .builb::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  background-color: #fff;
+  border-radius: 50%;
+  filter: blur(40px);
 }

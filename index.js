@@ -14,18 +14,18 @@ let objects = [
     {x: -0.1, y: -3.2, z: -1.15, sound: 'assets/FAUCET.mp3', created: false},
 ]
 
-let scene_objects = [/*(sound, light1),
-    (sound2, light2),
-    (sound3, light3), 
-    (sound4, light4),
-    (sound5, light5)*/
+let scene_objects = [
 ]
 
+const cssLight = document.querySelector('.light');
+cssLight.addEventListener('click', () => {
+    document.body.classList.toggle('on');
+})
+
 document.getElementById('startButton').addEventListener('click', ()=> {
-    //document.getElementById('controls').style.display= 'none';
-    document.getElementById('subT').style.display= 'none';
     document.getElementById('sceneContainer').style.display = 'block';
     document.getElementById('startButton').style.display = 'none';
+    document.getElementById('lightbulb').style.display = 'none';
     setup();
     transAnimation();
 });
@@ -143,13 +143,6 @@ function initMesh() {
 
         scene_objects.push(mesh);
     });
-
-    // const wallGeometry = new THREE.BoxGeometry( 2, 1, 0.1 );
-	// const wallMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, transparent: true, opacity: 0.5 } );
-	// const wall = new THREE.Mesh( wallGeometry, wallMaterial );
-    // wall.rotation.set(0, 55, 0);
-    // wall.position.set(-10.5, -1.3, 0.6);
-    // scene.add(wall);
 }
 
 
@@ -292,7 +285,7 @@ function gameMech() {
 
     const uncreatedObjects = objects.filter(obj => !objects.created);
     const loight = new THREE.PointLight( 0xffffff, 0.9 );
-    const ssoundObj = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+    const ssoundObj = new THREE.BoxGeometry(0.15, 0.15, 0.15);
     const mat = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0});
 
     const sssoundObj = new THREE.Mesh(ssoundObj, mat);
