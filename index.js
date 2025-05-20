@@ -21,9 +21,10 @@ const scoreDiv = document.createElement('div');
 
 
 let objects = [
-    //{x: -1.5, y: -0.3, z: 0.6, rot: 3.1, sound: 'assets/STATIC.mp3', created: false},
-    {x: -3.05, y: -2.6, z: 2.7, rot: 3.1, sound: 'assets/LAMP.mp3', created: false}
-    //{x: -0.1, y: -3.2, z: -1.15, rot: 3.1, sound: 'assets/FAUCET.mp3', created: false},
+    {x: -1.5, y: -0.3, z: 0.6, rot: 3.1, dir: 180, dir2: 80, sound: 'assets/STATIC.mp3', created: false},
+    {x: -3.05, y: -2.6, z: 2.7, rot: 3.1, dir: 140, dir2: 80, sound: 'assets/LAMP.mp3', created: false},
+    {x: 2.2, y: -2.6, z: 0, rot: 2, dir: 170, dir2: 220, sound: 'assets/CAR.mp3', created: false},
+    {x: -0.1, y: -3.2, z: -1.15, rot: 3.1, dir: 120, dir2: 90, sound: 'assets/FAUCET.mp3', created: false},
 ]
 
 let scene_objects = [
@@ -35,7 +36,7 @@ cssLight.addEventListener('click', () => {
 })
 
 document.getElementById('startButton').addEventListener('click', ()=> {
-    document.getElementById('heading').style.backgroundColor = '#000000';
+    document.getElementById('heading').style.backgroundColor = 'rgba(0, 0, 0, 0';
     document.getElementById('header').style.margin = '10px';
     document.getElementById('header').style.fontSize = '4em';
     document.getElementById('sceneContainer').style.display = 'block';
@@ -52,7 +53,7 @@ document.getElementById('startButton').addEventListener('click', ()=> {
     document.body.appendChild(scoreDiv);
 
     setup();
-    //transAnimation();
+    transAnimation();
 });
 
 function updateScoreDisplay() {
@@ -67,7 +68,7 @@ function setup() {
     initLights();
     initControls();
     initMesh();
-    initGUI();
+    //initGUI();
     animate();
     gameLoop();
 }
@@ -122,27 +123,27 @@ function initLights() {
     const light = new THREE.HemisphereLight( 0xffffff, spotLightCol, 0.4 );
     scene.add( light );
     
-    spotLight = new THREE.SpotLight( spotLightCol, 200 );
-    spotLight.position.set(-2.6, -0.6, 2.4);
-    spotLight.angle = 0.35;
-	spotLight.penumbra = 0.5;
-	spotLight.decay = 2;
-	spotLight.distance = 4;
-    spotLight.castShadow = true;
-	spotLight.shadow.mapSize.width = 1024;
-	spotLight.shadow.mapSize.height = 1024;
-    spotLight.shadow.camera.near = 1;
-	spotLight.shadow.camera.far = 10;
-	spotLight.shadow.focus = 1;
-    scene.add(spotLight);
+    // spotLight = new THREE.SpotLight( spotLightCol, 200 );
+    // spotLight.position.set(-2.6, 1.6, 2.4);
+    // spotLight.angle = 0.35;
+	// spotLight.penumbra = 0.5;
+	// spotLight.decay = 2;
+	// spotLight.distance = 4;
+    // spotLight.castShadow = true;
+	// spotLight.shadow.mapSize.width = 1024;
+	// spotLight.shadow.mapSize.height = 1024;
+    // spotLight.shadow.camera.near = 1;
+	// spotLight.shadow.camera.far = 10;
+	// spotLight.shadow.focus = 1;
+    // scene.add(spotLight);
 
-    spotTarget = new THREE.Object3D();
-    spotTarget.position.set(-2.6, -4, 2.4);
-    spotLight.target = spotTarget;
-    scene.add(spotTarget);
+    // spotTarget = new THREE.Object3D();
+    // spotTarget.position.set(-2.6, -4, 2.4);
+    // spotLight.target = spotTarget;
+    // scene.add(spotTarget);
 
-    lightHelper = new THREE.SpotLightHelper( spotLight );
-	//scene.add( lightHelper );
+    // lightHelper = new THREE.SpotLightHelper( spotLight );
+	// scene.add( lightHelper );
 }
 
 function initControls() {
@@ -158,7 +159,7 @@ function initControls() {
 
 function initMesh() {
     const loader = new GLTFLoader();
-    loader.load('assets/LO_inside.glb', (gltf) => {
+    loader.load('assets/interior.glb', (gltf) => {
         mesh = gltf.scene.children[0];
         console.log(gltf.scene.children);
         mesh.position.set(0, -3, 0);
@@ -168,7 +169,7 @@ function initMesh() {
         
     });
 
-    loader.load('assets/untitled.glb', (gltf) => {
+    loader.load('assets/exterior.glb', (gltf) => {
         mesh2 = gltf.scene.children[0];
         mesh2.position.set(0, -3, 0);
         mesh2.receiveShadow = true;
@@ -264,35 +265,35 @@ function transAnimation() {
 
     tl.to(camera.position, {
         delay: 1/3,
-        x: 14,
-        y: 15,
-        z: 14,
+        x: 8,
+        y: 5,
+        z: 8,
         duration: 2,
         ease: "slow"
     });
 
     tl.to(camera.position, {
-        x: 14,
-        y: 6,
-        z: -14,
-        duration: 1,
-        ease: "sine"
-    });
-
-    tl.to(camera.position, {
-        x: -14,
-        y: 2,
-        z: -14,
+        x: 8,
+        y: -2,
+        z: -8,
         duration: 2,
         ease: "slow"
     });
 
     tl.to(camera.position, {
-        x: -14,
-        y: 15,
-        z: 14,
+        x: -8,
+        y: 0,
+        z: -8,
         duration: 2,
-        ease: "power4"
+        ease: "slow"
+    });
+
+    tl.to(camera.position, {
+        x: -15,
+        y: 15,
+        z: 15,
+        duration: 2,
+        ease: "slow"
     });
 }
 
@@ -310,8 +311,8 @@ function animate() {
         mesh2.getWorldPosition(mesh2Pos);
         const distance = camera.position.distanceTo(mesh2Pos);
 
-        const minDist = 10;
-        const maxDist = 30;
+        const minDist = 12;
+        const maxDist = 25;
         let opacity = (distance - minDist) / (maxDist - minDist);
         opacity = THREE.MathUtils.clamp(opacity, 0.1, 1);
 
@@ -321,7 +322,7 @@ function animate() {
 
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
-    lightHelper.update();
+    //lightHelper.update();
 }
 
 function gameLoop() {
@@ -347,10 +348,10 @@ function gameMech() {
 
     const sssoundObj = new THREE.Mesh(ssoundObj, mat);
 
-    if(uncreatedObjects.length > 0){
-        const obx = Math.floor(Math.random()* uncreatedObjects.length);
-        const obj = uncreatedObjects[obx];
+    const obx = Math.floor(Math.random()* uncreatedObjects.length);
+    const obj = uncreatedObjects[obx];
 
+    if(uncreatedObjects.length > 0){
         loight.position.set(obj.x, obj.y, obj.z);
         sssoundObj.position.set(obj.x, obj.y, obj.z);
         sssoundObj.rotation.set(0, obj.rot, 0);
@@ -364,7 +365,7 @@ function gameMech() {
             newSound.play();
         });
 
-        newSound.setDirectionalCone(100, 180, 0.1);
+        newSound.setDirectionalCone(obj.dir, obj.dir2, 0.1);
         const posSoundHelper = new PositionalAudioHelper( newSound, 1 );
         newSound.add( posSoundHelper );
 
