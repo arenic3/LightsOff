@@ -7,6 +7,18 @@ import gsap from'gsap';
 
 let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisHelper, audioLoader, listener, newSound;
 let mesh;
+let loopInterval = null;
+let interval = 5000;
+const minInterval = 1000;
+const ramp = 0.95;
+let score = 0;
+let scoreInterval = null;
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+const scoreDiv = document.createElement('div');
+
 
 let objects = [
     {x: -1.5, y: -1.3, z: 0.6, sound: 'assets/STATIC.mp3', created: false},
@@ -24,15 +36,28 @@ cssLight.addEventListener('click', () => {
 
 document.getElementById('startButton').addEventListener('click', ()=> {
     document.getElementById('heading').style.backgroundColor = '#000000';
-    document.getElementById('header').style.margin = '0px';
+    document.getElementById('header').style.margin = '10px';
     document.getElementById('header').style.fontSize = '4em';
     document.getElementById('sceneContainer').style.display = 'block';
     document.getElementById('startButton').style.display = 'none';
     document.getElementById('lightbulb').style.display = 'none';
+    scoreDiv.id = 'score';
+    scoreDiv.style.position = 'fixed';
+    scoreDiv.style.top = '20px';
+    scoreDiv.style.right = '40px';
+    scoreDiv.style.fontSize = '2em';
+    scoreDiv.style.color = '#FF0000';
+    scoreDiv.style.zIndex = '9999';
+    scoreDiv.innerText = `Score: ${score}`;
+    document.body.appendChild(scoreDiv);
+
     setup();
     transAnimation();
 });
 
+function updateScoreDisplay() {
+    scoreDiv.innerText = `Score: ${score}`;
+}
 
 function setup() {
     //Setup the scene, camera, model. Import controls and render the scene;
@@ -143,11 +168,10 @@ function initMesh() {
         mesh.receiveShadow = true;
         scene.add(mesh);
         
-        scene_objects.push(mesh);
     });
 }
 
-
+//Debugging tools
 function initGUI() {
     const gui = new GUI();
 
@@ -273,19 +297,22 @@ function animate() {
 }
 
 function gameLoop() {
-    let timer
+   if (loopInterval) clearTimeout(loopInterval);
 
-    if(timer){
-        clearInterval(timer);
-    }
-    timer = setInterval(gameMech, 3500);
+   gameMech();
+
+   interval = Math.max(minInterval, interval * ramp);
+   loopInterval = setTimeout(gameLoop, interval);
 }
 
 function gameMech() {               
     //generate light & sound object at specified positions within the sceeeene
-    const activeSounds = [];
 
-    const uncreatedObjects = objects.filter(obj => !objects.created);
+    const occupiedPositions = scene_objects.map(o => `${o.createdObj.x},${o.createdObj.y},${o.createdObj.z}`);
+    const uncreatedObjects = objects.filter(obj => 
+        !obj.created && !occupiedPositions.includes(`${obj.x},${obj.y},${obj.z}`)
+    );
+    
     const loight = new THREE.PointLight( 0xffffff, 0.9 );
     const ssoundObj = new THREE.BoxGeometry(0.15, 0.15, 0.15);
     const mat = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0});
@@ -293,7 +320,7 @@ function gameMech() {
     const sssoundObj = new THREE.Mesh(ssoundObj, mat);
 
     if(uncreatedObjects.length > 0){
-        const obx = Math.floor(Math.random()* objects.length);
+        const obx = Math.floor(Math.random()* uncreatedObjects.length);
         const obj = uncreatedObjects[obx];
 
         loight.position.set(obj.x, obj.y, obj.z);
@@ -318,35 +345,63 @@ function gameMech() {
         scene.add(loight);
         scene.add(sssoundObj);
 
-        //scene_objects.push(loight);
-        //scene_objects.push(sssoundObj)
-
-        activeSounds.push(newSound);
+        scene_objects.push({
+            obj: sssoundObj,
+            light: loight,
+            sound: newSound,
+            penalty: 0,
+            timeActive: 0,
+            createdObj: obj
+        });
 
         obj.created = true;
     }
 
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
+    if (!scoreInterval) {
+        scoreInterval = setInterval(() => {
+        if (scene_objects.length === 0) {
+            clearInterval(scoreInterval);
+            scoreInterval = null;
+            return;
+        }
 
-    function onMouseClick(event){
+        scene_objects.forEach(active => {
+            active.timeActive += 1;
+            score -= 1;            
+        });
+
+        updateScoreDisplay();
+        }, 1000);
+    }
+}
+
+function onMouseClick(event){
         mouse.x = (event.clientX / window.innerWidth) * 2 -1;
         mouse.y = -((event.clientY / window.innerHeight) * 2 -1);
 
         raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects([sssoundObj], false);
-        const meshIntersects = raycaster.intersectObjects([mesh], true);
+        const intersects = raycaster.intersectObjects(scene_objects.map(obj => obj.obj), false);
 
-        console.log(meshIntersects);
         if(intersects.length > 0){
             console.log("clicked");
-            const obj = intersects[0].object;
-            if(obj === sssoundObj){
-                activeSounds[0].stop();
-                loight.visible = false;
-            }
-        }
-    }
+            const clickedObj = intersects[0].object;
+            const idx = scene_objects.findIndex(active => active.obj === clickedObj);
+            if (idx !== -1){
+                score += Math.max(10, 20 - scene_objects[idx].timeActive);
+                updateScoreDisplay();
+                scene.remove(scene_objects[idx].obj);
+                scene.remove(scene_objects[idx].light);
+                scene_objects[idx].sound.stop();
+                scene_objects[idx].createdObj.created = false;
+                scene_objects.splice(idx, 1);
 
-    window.addEventListener('click', onMouseClick, false);
-}
+                if(scene_objects.length === 0){
+                    clearInterval(scoreInterval);
+                    scoreInterval = null;
+                }
+            }
+
+        } 
+ }
+
+window.addEventListener('click', onMouseClick, false);

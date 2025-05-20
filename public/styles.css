@@ -12,12 +12,12 @@ body {
 }
 
 body.on {
-  background-color: rgb(3, 20, 34);
+  background-color: rgb(6, 37, 63);
   transition: background-color 0.5s ease;
 }
 
 body.on #heading {
-  background-color: rgb(3, 20, 34);
+  background-color: rgb(6, 37, 63);
   transition: background-color 0.5s ease;
 }
   
@@ -31,7 +31,7 @@ body.on #startButton {
 }
 
 body.on h1 {
-  color: rgb(144, 136, 85);
+  color: rgb(206, 191, 90);
 }
 
 #heading {
