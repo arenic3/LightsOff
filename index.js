@@ -6,7 +6,7 @@ import { PositionalAudioHelper } from 'three/addons/helpers/PositionalAudioHelpe
 import gsap from'gsap';
 
 let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisHelper, audioLoader, listener, newSound;
-let mesh;
+let mesh, mesh2;
 let loopInterval = null;
 let interval = 5000;
 const minInterval = 1000;
@@ -21,9 +21,9 @@ const scoreDiv = document.createElement('div');
 
 
 let objects = [
-    {x: -1.5, y: -1.3, z: 0.6, sound: 'assets/STATIC.mp3', created: false},
-    {x: 0.9, y: -1.6, z: 0.25, sound: 'assets/LAMP.mp3', created: false},
-    {x: -0.1, y: -3.2, z: -1.15, sound: 'assets/FAUCET.mp3', created: false},
+    //{x: -1.5, y: -0.3, z: 0.6, rot: 3.1, sound: 'assets/STATIC.mp3', created: false},
+    {x: -3.05, y: -2.6, z: 2.7, rot: 3.1, sound: 'assets/LAMP.mp3', created: false}
+    //{x: -0.1, y: -3.2, z: -1.15, rot: 3.1, sound: 'assets/FAUCET.mp3', created: false},
 ]
 
 let scene_objects = [
@@ -52,7 +52,7 @@ document.getElementById('startButton').addEventListener('click', ()=> {
     document.body.appendChild(scoreDiv);
 
     setup();
-    transAnimation();
+    //transAnimation();
 });
 
 function updateScoreDisplay() {
@@ -67,7 +67,7 @@ function setup() {
     initLights();
     initControls();
     initMesh();
-    //initGUI();
+    initGUI();
     animate();
     gameLoop();
 }
@@ -92,16 +92,12 @@ function initScene() {
     scene.add( camera );
 
     axisHelper = new THREE.AxesHelper( 10 );
-    //scene.add( axisHelper);
+    scene.add( axisHelper);
 }
 
 function initAudio() {
     listener = new THREE.AudioListener();
     camera.add(listener);
-
-    // for(i = 0; i < objects.length; i++){
-        
-    // }
     
     audioLoader = new THREE.AudioLoader();
 
@@ -162,12 +158,25 @@ function initControls() {
 
 function initMesh() {
     const loader = new GLTFLoader();
-    loader.load('assets/house.glb', (gltf) => {
+    loader.load('assets/LO_inside.glb', (gltf) => {
         mesh = gltf.scene.children[0];
-        mesh.position.set(0, -4, 0);
+        console.log(gltf.scene.children);
+        mesh.position.set(0, -3, 0);
         mesh.receiveShadow = true;
+        mesh.castShadow = true;
         scene.add(mesh);
         
+    });
+
+    loader.load('assets/untitled.glb', (gltf) => {
+        mesh2 = gltf.scene.children[0];
+        mesh2.position.set(0, -3, 0);
+        mesh2.receiveShadow = true;
+        mesh2.castShadow = true;
+        mesh2.material.transparent = true;
+        mesh2.material.opacity = 1;
+        mesh2.scale.set(1.01, 1.01, 1.01);  //Avoid clipping
+        scene.add(mesh2);
     });
 }
 
@@ -287,10 +296,29 @@ function transAnimation() {
     });
 }
 
+function resetAnimation() {
+
+}
+
 function animate() {
     controls.enableRotate = true;
     controls.enableZoom = true;
     controls.update();
+
+    if (mesh2 && mesh2.material) {
+        const mesh2Pos = new THREE.Vector3();
+        mesh2.getWorldPosition(mesh2Pos);
+        const distance = camera.position.distanceTo(mesh2Pos);
+
+        const minDist = 10;
+        const maxDist = 30;
+        let opacity = (distance - minDist) / (maxDist - minDist);
+        opacity = THREE.MathUtils.clamp(opacity, 0.1, 1);
+
+        mesh2.material.transparent = true;
+        mesh2.material.opacity = opacity;
+    }
+
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
     lightHelper.update();
@@ -325,6 +353,7 @@ function gameMech() {
 
         loight.position.set(obj.x, obj.y, obj.z);
         sssoundObj.position.set(obj.x, obj.y, obj.z);
+        sssoundObj.rotation.set(0, obj.rot, 0);
 
         newSound = new THREE.PositionalAudio( listener );
 
@@ -335,12 +364,10 @@ function gameMech() {
             newSound.play();
         });
 
-        newSound.setDirectionalCone(140, 180, 0.1);
-
+        newSound.setDirectionalCone(100, 180, 0.1);
         const posSoundHelper = new PositionalAudioHelper( newSound, 1 );
         newSound.add( posSoundHelper );
 
-        sssoundObj.rotation.set(0, -55, 0);
         sssoundObj.add(newSound);
         scene.add(loight);
         scene.add(sssoundObj);
