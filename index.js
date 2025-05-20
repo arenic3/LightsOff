@@ -23,6 +23,9 @@ cssLight.addEventListener('click', () => {
 })
 
 document.getElementById('startButton').addEventListener('click', ()=> {
+    document.getElementById('heading').style.backgroundColor = '#000000';
+    document.getElementById('header').style.margin = '0px';
+    document.getElementById('header').style.fontSize = '4em';
     document.getElementById('sceneContainer').style.display = 'block';
     document.getElementById('startButton').style.display = 'none';
     document.getElementById('lightbulb').style.display = 'none';
@@ -135,12 +138,11 @@ function initControls() {
 function initMesh() {
     const loader = new GLTFLoader();
     loader.load('assets/house.glb', (gltf) => {
-        mesh = gltf.scene;
+        mesh = gltf.scene.children[0];
         mesh.position.set(0, -4, 0);
         mesh.receiveShadow = true;
-
         scene.add(mesh);
-
+        
         scene_objects.push(mesh);
     });
 }
@@ -316,8 +318,8 @@ function gameMech() {
         scene.add(loight);
         scene.add(sssoundObj);
 
-        scene_objects.push(loight);
-        scene_objects.push(sssoundObj)
+        //scene_objects.push(loight);
+        //scene_objects.push(sssoundObj)
 
         activeSounds.push(newSound);
 
@@ -333,7 +335,9 @@ function gameMech() {
 
         raycaster.setFromCamera(mouse, camera);
         const intersects = raycaster.intersectObjects([sssoundObj], false);
+        const meshIntersects = raycaster.intersectObjects([mesh], true);
 
+        console.log(meshIntersects);
         if(intersects.length > 0){
             console.log("clicked");
             const obj = intersects[0].object;
