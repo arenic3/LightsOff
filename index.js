@@ -78,10 +78,11 @@ document.getElementById('startButton').addEventListener('click', ()=> {
     scoreDiv.innerText = `${score}`;
     document.body.appendChild(scoreDiv);
 
-    setup();
+    setup();    //Initialize scene, camera, mesh(s), audio & lights -> game Loop
     transAnimation();
 });
 
+//Score display, red if negative & green if pos.
 function updateScoreDisplay() {
     scoreDiv.innerText = `${score}`;
     if(score > 0){
@@ -91,6 +92,7 @@ function updateScoreDisplay() {
     }
 }
 
+//Setup
 function setup() {
     //Setup the scene, camera, model. Import controls and render the scene;
     initRenderer();
@@ -99,11 +101,12 @@ function setup() {
     initLights();
     initControls();
     initMesh();
-    //initGUI();
+    //initGUI();    //Debugging tools for spotlights
     animate();
     gameLoop();
 }
 
+//Initialize webGL renderer 
 function initRenderer() {
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -116,6 +119,7 @@ function initRenderer() {
 	renderer.toneMappingExposure = 1;
 }
 
+//Setup scene, size, camera and axis helper (for debug)
 function initScene() {
     scene = new THREE.Scene();
 
@@ -127,15 +131,17 @@ function initScene() {
     scene.add( axisHelper);
 }
 
+//Initialize audio
 function initAudio() {
     listener = new THREE.AudioListener();
     camera.add(listener);
     
     audioLoader = new THREE.AudioLoader();
 
-    listener.context.resume();
+    listener.context.resume();  //Resume context (needed for safari)
 }
 
+//Initialize base scene lights if not it would be pitch black
 function initLights() {
     const ambientLight = new THREE.AmbientLight( 0xcccccc, 0.9 );
     ambientLight.position.set(2.6, -2, 2.4);
@@ -145,13 +151,13 @@ function initLights() {
     //pointLight.position.set(-1.6, -1.3, 0.6);
     //scene.add( pointLight );
     
-
+    //Debugging tool 
     //const pointLightHelper = new THREE.PointLightHelper( pointLight , 0.5 );
     //scene.add( pointLightHelper);
 
     const spotLightCol = new THREE.Color( "rgb(240, 165, 70)" );
 
-    const light = new THREE.HemisphereLight( 0xffffff, spotLightCol, 0.4 );
+    const light = new THREE.HemisphereLight( 0xffffff, spotLightCol, 0.2 );
     scene.add( light );
     
     // spotLight = new THREE.SpotLight( spotLightCol, 200 );
@@ -177,6 +183,7 @@ function initLights() {
 	// scene.add( lightHelper );
 }
 
+//Orbital controls
 function initControls() {
     controls = new OrbitControls(camera, renderer.domElement);
     controls.minDistance = 4;
@@ -188,6 +195,8 @@ function initControls() {
     controls.update();
 }
 
+//Load our MagicaVoxel model in glb, one mesh for the interior 
+//and one for the exterior which fades the closer the camera gets
 function initMesh() {
     const loader = new GLTFLoader();
     loader.load('assets/untitled.glb', (gltf) => {
@@ -207,7 +216,7 @@ function initMesh() {
         mesh2.castShadow = true;
         mesh2.material.transparent = true;
         mesh2.material.opacity = 1;
-        mesh2.scale.set(1.001, 1.001, 1.001);  //Avoid clipping
+        mesh2.scale.set(1.001, 1.001, 1.001);  //Avoid clipping with the interior
         scene.add(mesh2);
     });
 }
@@ -280,6 +289,7 @@ function initGUI() {
     });
 }
 
+//Allow scene to be resized
 window.addEventListener('resize', onWindowResize);
 
 function onWindowResize(){
@@ -288,6 +298,8 @@ function onWindowResize(){
     renderer.setSize(window.innerWidth, window.innerHeight)
 }
 
+//Intro animation, spin around the house and showcase a first object 
+//turning on to point the user in the right direction
 function transAnimation() {
     controls.enableRotate = false;
     controls.enableZoom = false;
@@ -332,11 +344,13 @@ function resetAnimation() {
 
 }
 
+//Main loop
 function animate() {
     controls.enableRotate = true;
     controls.enableZoom = true;
     controls.update();
 
+    //Dynamic exterior mesh
     if (mesh2 && mesh2.material) {
         const mesh2Pos = new THREE.Vector3();
         mesh2.getWorldPosition(mesh2Pos);
@@ -356,6 +370,7 @@ function animate() {
     //lightHelper.update();
 }
 
+//Main loop to run game logic at ramping intervals (increasing difficulty)
 function gameLoop() {
    if (loopInterval) clearTimeout(loopInterval);
 
@@ -365,9 +380,10 @@ function gameLoop() {
    loopInterval = setTimeout(gameLoop, interval);
 }
 
-function gameMech() {               
-    //generate light & sound object at specified positions within the sceeeene
+//Game logic, copilot stated "this is where the magic happens"
+function gameMech() {   
 
+    //generate light & sound object at specified positions within the sceeeene
     const occupiedPositions = scene_objects.map(o => `${o.createdObj.x},${o.createdObj.y},${o.createdObj.z}`);
     const uncreatedObjects = objects.filter(obj => 
         !obj.created && !occupiedPositions.includes(`${obj.x},${obj.y},${obj.z}`)
@@ -434,6 +450,7 @@ function gameMech() {
     }
 }
 
+//Raycasting logic to handle clicks within the scene and turn off objects + score logic
 function onMouseClick(event){
         mouse.x = (event.clientX / window.innerWidth) * 2 -1;
         mouse.y = -((event.clientY / window.innerHeight) * 2 -1);
