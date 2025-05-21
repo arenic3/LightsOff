@@ -89,7 +89,7 @@ function initScene() {
     scene = new THREE.Scene();
 
     camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 0.1, 150 );
-    camera.position.set(-15, 15, 15);
+    camera.position.set(-15, 15, -15);
     scene.add( camera );
 
     axisHelper = new THREE.AxesHelper( 10 );
@@ -159,7 +159,7 @@ function initControls() {
 
 function initMesh() {
     const loader = new GLTFLoader();
-    loader.load('assets/interior.glb', (gltf) => {
+    loader.load('assets/untitled.glb', (gltf) => {
         mesh = gltf.scene.children[0];
         console.log(gltf.scene.children);
         mesh.position.set(0, -3, 0);
@@ -176,7 +176,7 @@ function initMesh() {
         mesh2.castShadow = true;
         mesh2.material.transparent = true;
         mesh2.material.opacity = 1;
-        mesh2.scale.set(1.01, 1.01, 1.01);  //Avoid clipping
+        mesh2.scale.set(1.001, 1.001, 1.001);  //Avoid clipping
         scene.add(mesh2);
     });
 }
@@ -265,7 +265,7 @@ function transAnimation() {
 
     tl.to(camera.position, {
         delay: 1/3,
-        x: 8,
+        x: -8,
         y: 5,
         z: 8,
         duration: 2,
@@ -275,13 +275,13 @@ function transAnimation() {
     tl.to(camera.position, {
         x: 8,
         y: -2,
-        z: -8,
+        z: 8,
         duration: 2,
         ease: "slow"
     });
 
     tl.to(camera.position, {
-        x: -8,
+        x: 8,
         y: 0,
         z: -8,
         duration: 2,
@@ -291,7 +291,7 @@ function transAnimation() {
     tl.to(camera.position, {
         x: -15,
         y: 15,
-        z: 15,
+        z: -15,
         duration: 2,
         ease: "slow"
     });
@@ -394,7 +394,7 @@ function gameMech() {
         }
 
         scene_objects.forEach(active => {
-            active.timeActive += 1;
+            active.timeActive += 2;
             score -= 1;            
         });
 
