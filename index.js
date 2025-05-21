@@ -26,10 +26,11 @@ let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisH
 let mesh, mesh2;
 let loopInterval = null;
 let interval = 5000;
-const minInterval = 1000;
+const minInterval = 500;
 const ramp = 0.95;
 let score = 0;
 let scoreInterval = null;
+let scoreTimeout = null;
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -80,6 +81,7 @@ document.getElementById('startButton').addEventListener('click', ()=> {
 
     setup();    //Initialize scene, camera, mesh(s), audio & lights -> game Loop
     transAnimation();
+    introMech();
 });
 
 //Score display, red if negative & green if pos.
@@ -103,7 +105,6 @@ function setup() {
     initMesh();
     //initGUI();    //Debugging tools for spotlights
     animate();
-    gameLoop();
 }
 
 //Initialize webGL renderer 
@@ -380,6 +381,48 @@ function gameLoop() {
    loopInterval = setTimeout(gameLoop, interval);
 }
 
+function introMech(){
+    const obj = objects[2];
+
+    if(!obj.created){
+        const loight = new THREE.PointLight( 0xffffff, 0.9 );
+        const ssoundObj = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+        const mat = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0});
+
+        const sssoundObj = new THREE.Mesh(ssoundObj, mat);
+
+        loight.position.set(obj.x, obj.y, obj.z);
+        sssoundObj.position.set(obj.x, obj.y, obj.z);
+        sssoundObj.rotation.set(0, obj.rot, 0);
+
+        const sound = new THREE.PositionalAudio(listener);
+        audioLoader.load(obj.sound, function(buffer) {
+            sound.setBuffer(buffer);
+            sound.setRefDistance(1);
+            sound.loop = true;
+            sound.play();
+        });
+
+        sound.setDirectionalCone(obj.dir, obj.dir2, 0.1);
+        
+        sssoundObj.add(sound);
+        scene.add(loight);
+        scene.add(sssoundObj);
+
+        scene_objects.push({
+            obj: sssoundObj,
+            light: loight,
+            sound: sound,
+            penalty: 0,
+            timeActive: 0,
+            createdObj: obj,
+            isIntro: true // flag for intro object
+        });
+
+        obj.created = true;
+    }
+}
+
 //Game logic, copilot stated "this is where the magic happens"
 function gameMech() {   
 
@@ -403,10 +446,9 @@ function gameMech() {
         sssoundObj.position.set(obj.x, obj.y, obj.z);
         sssoundObj.rotation.set(0, obj.rot, 0);
 
-        newSound = new THREE.PositionalAudio( listener );
-
-        audioLoader.load( obj.sound, function( buffer ) {
-            newSound.setBuffer( buffer );
+        newSound = new THREE.PositionalAudio(listener);
+        audioLoader.load(obj.sound, function(buffer) {
+            newSound.setBuffer(buffer);
             newSound.setRefDistance(1);
             newSound.loop = true;
             newSound.play();
@@ -432,22 +474,28 @@ function gameMech() {
         obj.created = true;
     }
 
-    if (!scoreInterval) {
-        scoreInterval = setInterval(() => {
-        if (scene_objects.length === 0) {
-            clearInterval(scoreInterval);
-            scoreInterval = null;
-            return;
-        }
-
-        scene_objects.forEach(active => {
-            active.timeActive += 2;
-            score -= 1;            
-        });
-
-        updateScoreDisplay();
-        }, 1000);
+    if (!scoreTimeout) {
+    scoreLoop();
     }
+}
+
+//Score logic loop, ramps in conjunctions with difficulty
+function scoreLoop() {
+    if (scoreTimeout) clearTimeout(scoreTimeout);
+
+    if (scene_objects.length === 0) {
+        scoreTimeout = null;
+        return;
+    }
+
+    scene_objects.forEach(active => {
+        active.timeActive += 1;
+        score -= 1;
+    });
+    updateScoreDisplay();
+
+    // Use the same interval as your game loop
+    scoreTimeout = setTimeout(scoreLoop, interval/2);
 }
 
 //Raycasting logic to handle clicks within the scene and turn off objects + score logic
@@ -463,7 +511,8 @@ function onMouseClick(event){
             const clickedObj = intersects[0].object;
             const idx = scene_objects.findIndex(active => active.obj === clickedObj);
             if (idx !== -1){
-                score += Math.max(5, 15 - scene_objects[idx].timeActive);
+                const wasIntro = !!scene_objects[idx].isIntro;
+                score += Math.max(5, 10 - scene_objects[idx].timeActive);
                 updateScoreDisplay();
                 scene.remove(scene_objects[idx].obj);
                 scene.remove(scene_objects[idx].light);
@@ -471,9 +520,8 @@ function onMouseClick(event){
                 scene_objects[idx].createdObj.created = false;
                 scene_objects.splice(idx, 1);
 
-                if(scene_objects.length === 0){
-                    clearInterval(scoreInterval);
-                    scoreInterval = null;
+                if(wasIntro){
+                   gameLoop();
                 }
             }
 
