@@ -37,12 +37,14 @@ const mouse = new THREE.Vector2();
 
 const scoreDiv = document.createElement('div');
 
-//Scene objects, with their coordinates, rotation for the sound to face the correct direction, directional cone main and seconday angle values, sound file and state.
+//Scene objects, with their coordinates, rotation for the sound to face the correct direction,
+//directional cone main and seconday angle values, sound file and state.
 let objects = [
     {x: -1.5, y: -0.3, z: 0.6, rot: 3.1, dir: 180, dir2: 80, sound: 'assets/STATIC.mp3', created: false},
     {x: -3.05, y: -2.6, z: 2.7, rot: 3.1, dir: 140, dir2: 80, sound: 'assets/LAMP.mp3', created: false},
-    {x: 2.2, y: -2.6, z: 0, rot: 2, dir: 170, dir2: 220, sound: 'assets/CAR.mp3', created: false},
+    {x: 2.2, y: -2.2, z: 0, rot: 2, dir: 170, dir2: 220, sound: 'assets/CAR.mp3', created: false},
     {x: -0.1, y: -3.2, z: -1.15, rot: 3.1, dir: 120, dir2: 90, sound: 'assets/FAUCET.mp3', created: false},
+    
 ]
 
 //Second array to be populated with active objects
@@ -57,12 +59,16 @@ cssLight.addEventListener('click', () => {
 
 //Event listener to clear the screen for the experience & add the score counter
 document.getElementById('startButton').addEventListener('click', ()=> {
-    document.getElementById('heading').style.backgroundColor = 'rgba(0, 0, 0, 0';
+    document.body.style.transition = 'none';
+    document.getElementById('heading').style.transition = 'none';
+    document.getElementById('heading').style.backgroundColor = 'rgba(0, 0, 0, 0)';
     document.getElementById('header1').style.margin = '10px';
     document.getElementById('header1').style.boxShadow = 'none';
+    document.getElementById('header1').style.backgroundColor = 'transparent';
     document.getElementById('header1').style.fontSize = '2em';
     document.getElementById('header2').style.margin = '10px';
     document.getElementById('header2').style.boxShadow = 'none';
+    document.getElementById('header2').style.backgroundColor = 'transparent';
     document.getElementById('header2').style.fontSize = '2em';
     document.getElementById('sceneContainer').style.display = 'block';
     document.getElementById('startButton').style.display = 'none';
@@ -307,6 +313,7 @@ function transAnimation() {
 
     var tl = gsap.timeline({repeat: 0, repeatDelay: 0});
 
+    //Bottom right corner
     tl.to(camera.position, {
         delay: 2/3,
         x: -8,
@@ -316,6 +323,7 @@ function transAnimation() {
         ease: "slow"
     });
 
+    //Top right corner
     tl.to(camera.position, {
         x: 8,
         y: -2,
@@ -324,6 +332,16 @@ function transAnimation() {
         ease: "slow"
     });
 
+    //Zoom on active object
+    tl.to(camera.position, {
+        x: 7,
+        y: -2,
+        z: 0,
+        duration: 1,
+        ease: "slow"
+    });
+
+    //Top left corner
     tl.to(camera.position, {
         x: 8,
         y: 0,
@@ -332,6 +350,7 @@ function transAnimation() {
         ease: "slow"
     });
 
+    //Bottom left / starting position
     tl.to(camera.position, {
         x: -15,
         y: 15,
@@ -381,12 +400,14 @@ function gameLoop() {
    loopInterval = setTimeout(gameLoop, interval);
 }
 
+//Duplicate of gameMech but calls a set object, doesnt update score at first
+//only runs once then the gameLoop takes over
 function introMech(){
     const obj = objects[2];
 
     if(!obj.created){
         const loight = new THREE.PointLight( 0xffffff, 0.9 );
-        const ssoundObj = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+        const ssoundObj = new THREE.BoxGeometry(0.25, 0.25, 0.25);
         const mat = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0});
 
         const sssoundObj = new THREE.Mesh(ssoundObj, mat);
@@ -426,26 +447,30 @@ function introMech(){
 //Game logic, copilot stated "this is where the magic happens"
 function gameMech() {   
 
-    //generate light & sound object at specified positions within the sceeeene
+    //Log coordinates being used by active objects & filter out available objects and unoccupied positions
     const occupiedPositions = scene_objects.map(o => `${o.createdObj.x},${o.createdObj.y},${o.createdObj.z}`);
     const uncreatedObjects = objects.filter(obj => 
         !obj.created && !occupiedPositions.includes(`${obj.x},${obj.y},${obj.z}`)
     );
     
+    //Local vars for intances of objects
     const loight = new THREE.PointLight( 0xffffff, 0.9 );
     const ssoundObj = new THREE.BoxGeometry(0.15, 0.15, 0.15);
     const mat = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0});
 
     const sssoundObj = new THREE.Mesh(ssoundObj, mat);
 
+    //Randomly choose an object that hasn't been created
     const obx = Math.floor(Math.random()* uncreatedObjects.length);
     const obj = uncreatedObjects[obx];
 
+    //Create objects if available
     if(uncreatedObjects.length > 0){
         loight.position.set(obj.x, obj.y, obj.z);
         sssoundObj.position.set(obj.x, obj.y, obj.z);
         sssoundObj.rotation.set(0, obj.rot, 0);
 
+        //Load sound
         newSound = new THREE.PositionalAudio(listener);
         audioLoader.load(obj.sound, function(buffer) {
             newSound.setBuffer(buffer);
@@ -454,7 +479,10 @@ function gameMech() {
             newSound.play();
         });
 
+        //Sound properties
         newSound.setDirectionalCone(obj.dir, obj.dir2, 0.1);
+
+        //Debugging tool
         const posSoundHelper = new PositionalAudioHelper( newSound, 1 );
         newSound.add( posSoundHelper );
 
@@ -462,6 +490,7 @@ function gameMech() {
         scene.add(loight);
         scene.add(sssoundObj);
 
+        //Add to active objects with new properties for score
         scene_objects.push({
             obj: sssoundObj,
             light: loight,
