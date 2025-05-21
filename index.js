@@ -1,3 +1,18 @@
+/*
+LIGHTS OUT -Nicolas Arellano Guzman
+
+Lightweight 3D immersive experience built off THREE.js making use of positional audio in a virtual environment.
+The experience is designed to be unwinable and a stressor to whoever gives it a go, fun is not this "games" goal, instead,
+this project was created out of sheer frustration against the ever increasing cost of energy and feeling impotent against energy companies.
+
+Through this experience the user is berated by sounds coming from every direction coupled with seeing their score go down faster than it will ever go up.
+In development I wanted to explore provoking "bad" emotions/feelings notably stress which is something we have all felt when opening that electricity bill,
+but I mostly wanted to try provoking these feelings through auditory stimuli. I've studied human biology and a some neuroscience in the past understanding 
+that our main method of recieving warning or alerts is through our aural sense. Now obviously sight plays a role in this which is why I wanted to explore a 3D space,
+where users wouldn't immediatly see where an object might be but would instead hear it.
+*/
+
+//Libraries
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
@@ -5,6 +20,8 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { PositionalAudioHelper } from 'three/addons/helpers/PositionalAudioHelper.js';
 import gsap from'gsap';
 
+
+//Global variables, helpers are for debugging feel free to add them back into the scene
 let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisHelper, audioLoader, listener, newSound;
 let mesh, mesh2;
 let loopInterval = null;
@@ -19,7 +36,7 @@ const mouse = new THREE.Vector2();
 
 const scoreDiv = document.createElement('div');
 
-
+//Scene objects, with their coordinates, rotation for the sound to face the correct direction, directional cone main and seconday angle values, sound file and state.
 let objects = [
     {x: -1.5, y: -0.3, z: 0.6, rot: 3.1, dir: 180, dir2: 80, sound: 'assets/STATIC.mp3', created: false},
     {x: -3.05, y: -2.6, z: 2.7, rot: 3.1, dir: 140, dir2: 80, sound: 'assets/LAMP.mp3', created: false},
@@ -27,29 +44,38 @@ let objects = [
     {x: -0.1, y: -3.2, z: -1.15, rot: 3.1, dir: 120, dir2: 90, sound: 'assets/FAUCET.mp3', created: false},
 ]
 
+//Second array to be populated with active objects
 let scene_objects = [
 ]
 
+//Css lightbulb event listener
 const cssLight = document.querySelector('.light');
 cssLight.addEventListener('click', () => {
     document.body.classList.toggle('on');
 })
 
+//Event listener to clear the screen for the experience & add the score counter
 document.getElementById('startButton').addEventListener('click', ()=> {
     document.getElementById('heading').style.backgroundColor = 'rgba(0, 0, 0, 0';
-    document.getElementById('header').style.margin = '10px';
-    document.getElementById('header').style.fontSize = '4em';
+    document.getElementById('header1').style.margin = '10px';
+    document.getElementById('header1').style.boxShadow = 'none';
+    document.getElementById('header1').style.fontSize = '2em';
+    document.getElementById('header2').style.margin = '10px';
+    document.getElementById('header2').style.boxShadow = 'none';
+    document.getElementById('header2').style.fontSize = '2em';
     document.getElementById('sceneContainer').style.display = 'block';
     document.getElementById('startButton').style.display = 'none';
     document.getElementById('lightbulb').style.display = 'none';
+    document.getElementById('author').style.display = 'none';
     scoreDiv.id = 'score';
     scoreDiv.style.position = 'fixed';
     scoreDiv.style.top = '20px';
     scoreDiv.style.right = '40px';
+    scoreDiv.style.fontFamily = 'Monaco'
     scoreDiv.style.fontSize = '2em';
-    scoreDiv.style.color = '#FF0000';
+    scoreDiv.style.color = '#D3D3D3';
     scoreDiv.style.zIndex = '9999';
-    scoreDiv.innerText = `Score: ${score}`;
+    scoreDiv.innerText = `${score}`;
     document.body.appendChild(scoreDiv);
 
     setup();
@@ -57,7 +83,12 @@ document.getElementById('startButton').addEventListener('click', ()=> {
 });
 
 function updateScoreDisplay() {
-    scoreDiv.innerText = `Score: ${score}`;
+    scoreDiv.innerText = `${score}`;
+    if(score > 0){
+        scoreDiv.style.color = '#00FF00';
+    } else if(score < 0){
+        scoreDiv.style.color = '#FF0000';
+    }
 }
 
 function setup() {
@@ -264,7 +295,7 @@ function transAnimation() {
     var tl = gsap.timeline({repeat: 0, repeatDelay: 0});
 
     tl.to(camera.position, {
-        delay: 1/3,
+        delay: 2/3,
         x: -8,
         y: 5,
         z: 8,
@@ -415,7 +446,7 @@ function onMouseClick(event){
             const clickedObj = intersects[0].object;
             const idx = scene_objects.findIndex(active => active.obj === clickedObj);
             if (idx !== -1){
-                score += Math.max(10, 20 - scene_objects[idx].timeActive);
+                score += Math.max(5, 15 - scene_objects[idx].timeActive);
                 updateScoreDisplay();
                 scene.remove(scene_objects[idx].obj);
                 scene.remove(scene_objects[idx].light);
