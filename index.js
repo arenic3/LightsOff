@@ -22,29 +22,29 @@ import gsap from'gsap';
 
 
 //Global variables, helpers are for debugging feel free to add them back into the scene
-let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisHelper, audioLoader, listener, newSound;
+let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisHelper, audioLoader, listener, newSound, videoTex, videoGeom, videoMat, videoObj;
 let mesh, mesh2;
 let loopInterval = null;
 let interval = 5000;
 const minInterval = 500;
 const ramp = 0.95;
 let score = 0;
-let scoreInterval = null;
 let scoreTimeout = null;
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+const video = document.createElement('video');
 const scoreDiv = document.createElement('div');
 
 //Scene objects, with their coordinates, rotation for the sound to face the correct direction,
 //directional cone main and seconday angle values, sound file and state.
 let objects = [
-    {x: -1.5, y: -0.3, z: 0.6, rot: 3.1, dir: 180, dir2: 80, sound: 'assets/STATIC.mp3', created: false},
+    {x: -0.8, y: -0.6, z: 2.2, rot: 3.1, dir: 180, dir2: 80, sound: 'assets/STATIC.mp3', created: false},
     {x: -3.05, y: -2.6, z: 2.7, rot: 3.1, dir: 140, dir2: 80, sound: 'assets/LAMP.mp3', created: false},
     {x: 2.2, y: -2.2, z: 0, rot: 2, dir: 170, dir2: 220, sound: 'assets/CAR.mp3', created: false},
-    {x: -0.1, y: -3.2, z: -1.15, rot: 3.1, dir: 120, dir2: 90, sound: 'assets/FAUCET.mp3', created: false},
-    
+    {x: -0.2, y: -2.5, z: 0.25, rot: , dir: 120, dir2: 90, sound: 'assets/FAUCET.mp3', created: false},
+
 ]
 
 //Second array to be populated with active objects
@@ -106,6 +106,7 @@ function setup() {
     initRenderer();
     initScene();
     initAudio();
+    initVideo();
     initLights();
     initControls();
     initMesh();
@@ -146,6 +147,20 @@ function initAudio() {
     audioLoader = new THREE.AudioLoader();
 
     listener.context.resume();  //Resume context (needed for safari)
+}
+
+function initVideo() {
+    video.src = 'assets/TV.mp4'; // Path to your video file
+    video.crossOrigin = 'anonymous';
+    video.loop = true;
+    video.muted = true; // Set to true if you want autoplay without user interaction
+    video.playsInline = true;
+    video.load();
+
+    videoTex = new THREE.VideoTexture(video);
+    videoTex.minFilter = THREE.LinearFilter;
+    videoTex.magFilter = THREE.LinearFilter;
+    videoTex.format = THREE.RGBFormat;
 }
 
 //Initialize base scene lights if not it would be pitch black
@@ -206,7 +221,7 @@ function initControls() {
 //and one for the exterior which fades the closer the camera gets
 function initMesh() {
     const loader = new GLTFLoader();
-    loader.load('assets/untitled.glb', (gltf) => {
+    loader.load('assets/models/interior.glb', (gltf) => {
         mesh = gltf.scene.children[0];
         console.log(gltf.scene.children);
         mesh.position.set(0, -3, 0);
@@ -216,7 +231,7 @@ function initMesh() {
         
     });
 
-    loader.load('assets/exterior.glb', (gltf) => {
+    loader.load('assets/models/exterior.glb', (gltf) => {
         mesh2 = gltf.scene.children[0];
         mesh2.position.set(0, -3, 0);
         mesh2.receiveShadow = true;
@@ -464,6 +479,19 @@ function gameMech() {
     const obx = Math.floor(Math.random()* uncreatedObjects.length);
     const obj = uncreatedObjects[obx];
 
+    videoGeom = new THREE.PlaneGeometry(1.2, 0.55); // Adjust size as needed
+    videoMat = new THREE.MeshBasicMaterial({ map: videoTex, side: THREE.DoubleSide });
+    videoObj = new THREE.Mesh(videoGeom, videoMat);
+    videoObj.position.set(-0.85, -0.59, 2.295); // Adjust position as needed
+    videoObj.visible = false; // Hide by default
+    scene.add(videoObj);
+
+    // Inside gameMech or introMech, after creating the object:
+    if (obj === objects[0]) {
+        videoObj.visible = true;
+        video.play();
+    }
+
     //Create objects if available
     if(uncreatedObjects.length > 0){
         loight.position.set(obj.x, obj.y, obj.z);
@@ -543,6 +571,14 @@ function onMouseClick(event){
                 const wasIntro = !!scene_objects[idx].isIntro;
                 score += Math.max(5, 10 - scene_objects[idx].timeActive);
                 updateScoreDisplay();
+
+                if (scene_objects[idx].createdObj === objects[0]) {
+                    videoObj.visible = false;
+                    video.pause();
+                    video.currentTime = 0;
+                    scene.remove(videoObj);
+                }
+
                 scene.remove(scene_objects[idx].obj);
                 scene.remove(scene_objects[idx].light);
                 scene_objects[idx].sound.stop();
