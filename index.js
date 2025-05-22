@@ -26,6 +26,7 @@ let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisH
 let mesh, mesh2;
 let loopInterval = null;
 let interval = 5000;
+let interval2 = 1000;
 const minInterval = 500;
 const ramp = 0.95;
 let score = 0;
@@ -40,22 +41,21 @@ const scoreDiv = document.createElement('div');
 //Scene objects, with their coordinates, rotation for the sound to face the correct direction,
 //directional cone main and seconday angle values, sound file and state.
 let objects = [
-    {x: -0.8, y: -0.6, z: 2.2, rot: 3.1, dir: 180, dir2: 80, sound: 'assets/STATIC.mp3', created: false},
-    {x: -3.05, y: -2.6, z: 2.7, rot: 3.1, dir: 140, dir2: 80, sound: 'assets/LAMP.mp3', created: false},
+    {x: -0.8, y: -0.6, z: 2.2, rot: 3.1, dir: 80, dir2: 180, sound: 'assets/STATIC.mp3', created: false},
+    {x: -3.05, y: -2.6, z: 2.7, rot: 3.1, dir: 80, dir2: 140, sound: 'assets/LAMP.mp3', created: false},
     {x: 2.2, y: -2.2, z: 0, rot: 2, dir: 170, dir2: 220, sound: 'assets/CAR.mp3', created: false},
-    {x: -0.2, y: -2.5, z: 0.25, rot: , dir: 120, dir2: 90, sound: 'assets/FAUCET.mp3', created: false},
+    {x: -0.2, y: -2.5, z: 0.25, rot: 0, dir: 100, dir2: 120, sound: 'assets/FAUCET.mp3', created: false},
 
-]
+];
 
 //Second array to be populated with active objects
-let scene_objects = [
-]
+let scene_objects = [];
 
 //Css lightbulb event listener
 const cssLight = document.querySelector('.light');
 cssLight.addEventListener('click', () => {
     document.body.classList.toggle('on');
-})
+});
 
 //Event listener to clear the screen for the experience & add the score counter
 document.getElementById('startButton').addEventListener('click', ()=> {
@@ -97,7 +97,7 @@ function updateScoreDisplay() {
         scoreDiv.style.color = '#00FF00';
     } else if(score < 0){
         scoreDiv.style.color = '#FF0000';
-    }
+    };
 }
 
 //Setup
@@ -110,7 +110,7 @@ function setup() {
     initLights();
     initControls();
     initMesh();
-    //initGUI();    //Debugging tools for spotlights
+    //initGUI();    //Debugging tools for spotlight
     animate();
 }
 
@@ -135,8 +135,8 @@ function initScene() {
     camera.position.set(-15, 15, -15);
     scene.add( camera );
 
-    axisHelper = new THREE.AxesHelper( 10 );
-    scene.add( axisHelper);
+    // axisHelper = new THREE.AxesHelper( 10 );
+    // scene.add( axisHelper);
 }
 
 //Initialize audio
@@ -161,46 +161,42 @@ function initVideo() {
     videoTex.minFilter = THREE.LinearFilter;
     videoTex.magFilter = THREE.LinearFilter;
     videoTex.format = THREE.RGBFormat;
+
+    videoGeom = new THREE.PlaneGeometry(1.2, 0.55); // Adjust size as needed
+    videoMat = new THREE.MeshBasicMaterial({ map: videoTex, side: THREE.DoubleSide });
+    videoObj = new THREE.Mesh(videoGeom, videoMat);
+    videoObj.position.set(-0.85, -0.59, 2.295); // Adjust position as needed
+    videoObj.visible = false; // Hide by default
+    scene.add(videoObj);
 }
 
 //Initialize base scene lights if not it would be pitch black
 function initLights() {
-    const ambientLight = new THREE.AmbientLight( 0xcccccc, 0.9 );
-    ambientLight.position.set(2.6, -2, 2.4);
-    //scene.add( ambientLight );
-
-    //const pointLight = new THREE.PointLight( 0xffffff, 0.9 );
-    //pointLight.position.set(-1.6, -1.3, 0.6);
-    //scene.add( pointLight );
-    
-    //Debugging tool 
-    //const pointLightHelper = new THREE.PointLightHelper( pointLight , 0.5 );
-    //scene.add( pointLightHelper);
-
     const spotLightCol = new THREE.Color( "rgb(240, 165, 70)" );
 
     const light = new THREE.HemisphereLight( 0xffffff, spotLightCol, 0.2 );
     scene.add( light );
     
-    // spotLight = new THREE.SpotLight( spotLightCol, 200 );
-    // spotLight.position.set(-2.6, 1.6, 2.4);
-    // spotLight.angle = 0.35;
-	// spotLight.penumbra = 0.5;
-	// spotLight.decay = 2;
-	// spotLight.distance = 4;
-    // spotLight.castShadow = true;
-	// spotLight.shadow.mapSize.width = 1024;
-	// spotLight.shadow.mapSize.height = 1024;
-    // spotLight.shadow.camera.near = 1;
-	// spotLight.shadow.camera.far = 10;
-	// spotLight.shadow.focus = 1;
-    // scene.add(spotLight);
+    spotLight = new THREE.SpotLight( spotLightCol, 200 );
+    spotLight.position.set(-3.9, -1.5, -3.77);
+    spotLight.angle = 0.5;
+	spotLight.penumbra = 0.5;
+	spotLight.decay = 2;
+	spotLight.distance = 2;
+    spotLight.castShadow = true;
+	spotLight.shadow.mapSize.width = 1024;
+	spotLight.shadow.mapSize.height = 1024;
+    spotLight.shadow.camera.near = 1;
+	spotLight.shadow.camera.far = 10;
+	spotLight.shadow.focus = 1;
+    scene.add(spotLight);
 
-    // spotTarget = new THREE.Object3D();
-    // spotTarget.position.set(-2.6, -4, 2.4);
-    // spotLight.target = spotTarget;
-    // scene.add(spotTarget);
+    spotTarget = new THREE.Object3D();
+    spotTarget.position.set(-3.9, -3, -3.77);
+    spotLight.target = spotTarget;
+    scene.add(spotTarget);
 
+    //Debug tool
     // lightHelper = new THREE.SpotLightHelper( spotLight );
 	// scene.add( lightHelper );
 }
@@ -221,7 +217,7 @@ function initControls() {
 //and one for the exterior which fades the closer the camera gets
 function initMesh() {
     const loader = new GLTFLoader();
-    loader.load('assets/models/interior.glb', (gltf) => {
+    loader.load('assets/models/untitled.glb', (gltf) => {
         mesh = gltf.scene.children[0];
         console.log(gltf.scene.children);
         mesh.position.set(0, -3, 0);
@@ -376,7 +372,8 @@ function transAnimation() {
 }
 
 function resetAnimation() {
-
+    controls.enableRotate = false;
+    controls.enableZoom = false;
 }
 
 //Main loop
@@ -398,7 +395,7 @@ function animate() {
 
         mesh2.material.transparent = true;
         mesh2.material.opacity = opacity;
-    }
+    };
 
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
@@ -412,6 +409,7 @@ function gameLoop() {
    gameMech();
 
    interval = Math.max(minInterval, interval * ramp);
+   interval2 = Math.max(minInterval, interval2 * ramp);
    loopInterval = setTimeout(gameLoop, interval);
 }
 
@@ -459,7 +457,7 @@ function introMech(){
     }
 }
 
-//Game logic, copilot stated "this is where the magic happens"
+//Game logic, copilot autocomplete says "this is where the magic happens"
 function gameMech() {   
 
     //Log coordinates being used by active objects & filter out available objects and unoccupied positions
@@ -479,18 +477,11 @@ function gameMech() {
     const obx = Math.floor(Math.random()* uncreatedObjects.length);
     const obj = uncreatedObjects[obx];
 
-    videoGeom = new THREE.PlaneGeometry(1.2, 0.55); // Adjust size as needed
-    videoMat = new THREE.MeshBasicMaterial({ map: videoTex, side: THREE.DoubleSide });
-    videoObj = new THREE.Mesh(videoGeom, videoMat);
-    videoObj.position.set(-0.85, -0.59, 2.295); // Adjust position as needed
-    videoObj.visible = false; // Hide by default
-    scene.add(videoObj);
-
     // Inside gameMech or introMech, after creating the object:
     if (obj === objects[0]) {
         videoObj.visible = true;
         video.play();
-    }
+    };
 
     //Create objects if available
     if(uncreatedObjects.length > 0){
@@ -511,8 +502,8 @@ function gameMech() {
         newSound.setDirectionalCone(obj.dir, obj.dir2, 0.1);
 
         //Debugging tool
-        const posSoundHelper = new PositionalAudioHelper( newSound, 1 );
-        newSound.add( posSoundHelper );
+        // const posSoundHelper = new PositionalAudioHelper( newSound, 1 );
+        // newSound.add( posSoundHelper );
 
         sssoundObj.add(newSound);
         scene.add(loight);
@@ -529,11 +520,11 @@ function gameMech() {
         });
 
         obj.created = true;
-    }
+    };
 
     if (!scoreTimeout) {
     scoreLoop();
-    }
+    };
 }
 
 //Score logic loop, ramps in conjunctions with difficulty
@@ -543,16 +534,100 @@ function scoreLoop() {
     if (scene_objects.length === 0) {
         scoreTimeout = null;
         return;
-    }
+    };
 
     scene_objects.forEach(active => {
         active.timeActive += 1;
         score -= 1;
     });
+
     updateScoreDisplay();
 
-    // Use the same interval as your game loop
-    scoreTimeout = setTimeout(scoreLoop, interval/2);
+    scoreTimeout = setTimeout(scoreLoop, interval2);
+
+    //"Game over" conditions
+    if (score <= -100) {
+        score = -100;
+        updateScoreDisplay();
+
+        controls.enabled = false;
+
+        scene_objects.forEach(obj => {
+            obj.sound.setVolume(0.4);
+        })
+
+        end();
+        };
+}
+
+function end() {
+    let gameOverDiv = document.getElementById('gameOver');
+    if (!gameOverDiv) {
+        gameOverDiv = document.createElement('div');
+        gameOverDiv.id = 'gameOver';
+        gameOverDiv.style.position = 'fixed';
+        gameOverDiv.style.top = '50%';
+        gameOverDiv.style.left = '50%';
+        gameOverDiv.style.transform = 'translate(-50%, -50%)';
+        gameOverDiv.style.fontSize = '4em';
+        gameOverDiv.style.color = '#D3D3D3';
+        gameOverDiv.style.background = 'rgba(0,0,0,0.4)';
+        gameOverDiv.style.padding = '0.5em 1em';
+        gameOverDiv.style.borderRadius = '5px';
+        gameOverDiv.style.zIndex = '10000';
+        gameOverDiv.innerText = 'YOU FAILED';
+
+        const restartBtn = document.createElement('button');
+        restartBtn.innerText = 'Restart';
+        restartBtn.style.display = 'block';
+        restartBtn.style.margin = '0 auto 1em auto';
+        restartBtn.style.fontSize = '0.5em';
+        restartBtn.style.padding = '0.5em 1em';
+        restartBtn.style.cursor = 'pointer';
+        restartBtn.onclick = refresh;
+
+        // Insert button at the top
+        gameOverDiv.insertBefore(restartBtn, gameOverDiv.firstChild);
+
+        document.body.appendChild(gameOverDiv);
+    } else {
+        gameOverDiv.style.display = 'block';
+    }
+}
+
+function refresh() {
+
+    controls.enabled = true;
+
+    scene_objects.forEach(obj => {
+        scene.remove(obj.obj);
+        scene.remove(obj.light);
+        if(obj.sound && obj.sound.isPlaying) obj.sound.stop();
+        obj.createdObj.created = false;
+    });
+
+    scene_objects = [];
+
+    score = 0;
+    updateScoreDisplay();
+
+    if(loopInterval) clearTimeout(loopInterval);
+    if(scoreTimeout) clearTimeout(scoreTimeout);
+    interval = 5000;
+    interval2 = 1000;
+
+    const gameOverDiv = document.getElementById('gameOver');
+    if(gameOverDiv) gameOverDiv.style.display = 'none';
+
+    if(videoObj) {
+        videoObj.visible = false;
+        video.pause();
+        video.currentTime = 0;
+    };
+
+    animate();
+    resetAnimation();
+    introMech();
 }
 
 //Raycasting logic to handle clicks within the scene and turn off objects + score logic
@@ -569,14 +644,13 @@ function onMouseClick(event){
             const idx = scene_objects.findIndex(active => active.obj === clickedObj);
             if (idx !== -1){
                 const wasIntro = !!scene_objects[idx].isIntro;
-                score += Math.max(5, 10 - scene_objects[idx].timeActive);
+                score += Math.max(5, 15 - scene_objects[idx].timeActive);
                 updateScoreDisplay();
 
                 if (scene_objects[idx].createdObj === objects[0]) {
                     videoObj.visible = false;
                     video.pause();
                     video.currentTime = 0;
-                    scene.remove(videoObj);
                 }
 
                 scene.remove(scene_objects[idx].obj);
