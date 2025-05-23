@@ -29,7 +29,7 @@ let interval = 5000;
 let interval2 = 1000;
 const minInterval = 500;
 const ramp = 0.95;
-let score = 0;
+let score = 100;
 let scoreTimeout = null;
 
 const raycaster = new THREE.Raycaster();
@@ -39,13 +39,17 @@ const video = document.createElement('video');
 const scoreDiv = document.createElement('div');
 
 //Scene objects, with their coordinates, rotation for the sound to face the correct direction,
-//directional cone main and seconday angle values, sound file and state.
+//directional cone main and seconday angle values, hitbox scale, sound file and state.
 let objects = [
-    {x: -0.8, y: -0.6, z: 2.2, rot: 3.1, dir: 80, dir2: 180, sound: 'assets/STATIC.mp3', created: false},
-    {x: -3.05, y: -2.6, z: 2.7, rot: 3.1, dir: 80, dir2: 140, sound: 'assets/LAMP.mp3', created: false},
-    {x: 2.2, y: -2.2, z: 0, rot: 2, dir: 170, dir2: 220, sound: 'assets/CAR.mp3', created: false},
-    {x: -0.2, y: -2.5, z: 0.25, rot: 0, dir: 100, dir2: 120, sound: 'assets/FAUCET.mp3', created: false},
-
+    {x: -0.8, y: -0.6, z: 2.2, rot: 3.1, dir: 80, dir2: 180, scale: 3.5, col: "blue", sound: 'assets/STATIC.mp3', created: false},
+    {x: -3.05, y: -2.6, z: 2.6, rot: 3.1, dir: 80, dir2: 140, scale: 1, col: "goldenrod", sound: 'assets/LAMP.mp3', created: false},
+    {x: -1.4, y: -2.6, z: 2.6, rot: 4, dir: 70, dir2: 90, scale: 1, col: "goldenrod", sound: 'assets/LAMP.mp3', created: false},
+    {x: 2.2, y: -2.2, z: 0, rot: 2, dir: 170, dir2: 220, scale: 8, col: "firebrick", sound: 'assets/CAR.mp3', created: false},
+    {x: -0.3, y: -2.5, z: 0.35, rot: 0, dir: 100, dir2: 120, scale: 1.5, col: "cyan", sound: 'assets/FAUCET.mp3', created: false},
+    {x: 0.15, y: -2.5, z: -2.5, rot: -0.6, dir: 100, dir2: 180, scale: 2, col: "green", sound: 'assets/DRYER.mp3', created: false},
+    {x: -0.55, y: -2.5, z: -2.5, rot: 0, dir: 135, dir2: 200, scale: 2, col: "red", sound: 'assets/WASHER.mp3', created: false},
+    {x: -2.5, y: -0.3, z: -0.65, rot: 4.8, dir: 135, dir2: 180, scale: 1, col: "grey", sound: 'assets/LIGHT.mp3', created: false},
+    {x: -2.6, y: -0.3, z: 2.1, rot: 5, dir: 155, dir2: 210, scale: 2, col: "grey", sound: 'assets/LIGHT.mp3', created: false},
 ];
 
 //Second array to be populated with active objects
@@ -93,9 +97,9 @@ document.getElementById('startButton').addEventListener('click', ()=> {
 //Score display, red if negative & green if pos.
 function updateScoreDisplay() {
     scoreDiv.innerText = `${score}`;
-    if(score > 0){
-        scoreDiv.style.color = '#00FF00';
-    } else if(score < 0){
+    if(score > 50){
+        scoreDiv.style.color = '#D3D3D3';
+    } else if(score < 50){
         scoreDiv.style.color = '#FF0000';
     };
 }
@@ -135,6 +139,7 @@ function initScene() {
     camera.position.set(-15, 15, -15);
     scene.add( camera );
 
+    //Debugger
     // axisHelper = new THREE.AxesHelper( 10 );
     // scene.add( axisHelper);
 }
@@ -221,21 +226,43 @@ function initMesh() {
         mesh = gltf.scene.children[0];
         console.log(gltf.scene.children);
         mesh.position.set(0, -3, 0);
-        mesh.receiveShadow = true;
         mesh.castShadow = true;
+        mesh.receiveShadow = true;
         scene.add(mesh);
+
+        mesh.traverse(child => {
+        if (child.isMesh) {
+            child.material = new THREE.MeshStandardMaterial({ 
+            map: child.material.map, 
+            color: child.material.color 
+        });
+        child.castShadow = true;
+        child.receiveShadow = true;
+    }
+});
         
     });
 
     loader.load('assets/models/exterior.glb', (gltf) => {
         mesh2 = gltf.scene.children[0];
         mesh2.position.set(0, -3, 0);
-        mesh2.receiveShadow = true;
         mesh2.castShadow = true;
+        mesh2.receiveShadow = true;
         mesh2.material.transparent = true;
         mesh2.material.opacity = 1;
         mesh2.scale.set(1.001, 1.001, 1.001);  //Avoid clipping with the interior
         scene.add(mesh2);
+
+        mesh2.traverse(child => {
+    if (child.isMesh) {
+        child.material = new THREE.MeshStandardMaterial({ 
+            map: child.material.map, 
+            color: child.material.color 
+        });
+        child.castShadow = true;
+        child.receiveShadow = true;
+    }
+});
     });
 }
 
@@ -388,8 +415,10 @@ function animate() {
         mesh2.getWorldPosition(mesh2Pos);
         const distance = camera.position.distanceTo(mesh2Pos);
 
+        //Threshold
         const minDist = 12;
         const maxDist = 25;
+
         let opacity = (distance - minDist) / (maxDist - minDist);
         opacity = THREE.MathUtils.clamp(opacity, 0.1, 1);
 
@@ -416,11 +445,13 @@ function gameLoop() {
 //Duplicate of gameMech but calls a set object, doesnt update score at first
 //only runs once then the gameLoop takes over
 function introMech(){
-    const obj = objects[2];
+    const obj = objects[3];
 
     if(!obj.created){
-        const loight = new THREE.PointLight( 0xffffff, 0.9 );
-        const ssoundObj = new THREE.BoxGeometry(0.25, 0.25, 0.25);
+        const c = obj.col;
+        const col = new THREE.Color(c);
+        const loight = new THREE.PointLight( col, 0.9 );
+        const ssoundObj = new THREE.BoxGeometry(0.15, 0.15, 0.15);
         const mat = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0});
 
         const sssoundObj = new THREE.Mesh(ssoundObj, mat);
@@ -428,6 +459,7 @@ function introMech(){
         loight.position.set(obj.x, obj.y, obj.z);
         sssoundObj.position.set(obj.x, obj.y, obj.z);
         sssoundObj.rotation.set(0, obj.rot, 0);
+        sssoundObj.scale.set(obj.scale, obj.scale, obj.scale);
 
         const sound = new THREE.PositionalAudio(listener);
         audioLoader.load(obj.sound, function(buffer) {
@@ -465,19 +497,22 @@ function gameMech() {
     const uncreatedObjects = objects.filter(obj => 
         !obj.created && !occupiedPositions.includes(`${obj.x},${obj.y},${obj.z}`)
     );
-    
-    //Local vars for intances of objects
-    const loight = new THREE.PointLight( 0xffffff, 0.9 );
-    const ssoundObj = new THREE.BoxGeometry(0.15, 0.15, 0.15);
-    const mat = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0});
-
-    const sssoundObj = new THREE.Mesh(ssoundObj, mat);
 
     //Randomly choose an object that hasn't been created
     const obx = Math.floor(Math.random()* uncreatedObjects.length);
     const obj = uncreatedObjects[obx];
+    
+    //Local vars for intances of objects
+    const c = obj.col;
+    const col = new THREE.Color(c);
+    const baseSize = 0.15;
+    const loight = new THREE.PointLight( col, 0.9 );
+    const ssoundObj = new THREE.BoxGeometry(baseSize, baseSize, baseSize);
+    const mat = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0});
 
-    // Inside gameMech or introMech, after creating the object:
+    const sssoundObj = new THREE.Mesh(ssoundObj, mat);
+
+    //Play video if object is TV
     if (obj === objects[0]) {
         videoObj.visible = true;
         video.play();
@@ -488,7 +523,8 @@ function gameMech() {
         loight.position.set(obj.x, obj.y, obj.z);
         sssoundObj.position.set(obj.x, obj.y, obj.z);
         sssoundObj.rotation.set(0, obj.rot, 0);
-
+        sssoundObj.scale.set(obj.scale, obj.scale, obj.scale);
+        
         //Load sound
         newSound = new THREE.PositionalAudio(listener);
         audioLoader.load(obj.sound, function(buffer) {
@@ -504,6 +540,9 @@ function gameMech() {
         //Debugging tool
         // const posSoundHelper = new PositionalAudioHelper( newSound, 1 );
         // newSound.add( posSoundHelper );
+
+        // const geoHelper = new THREE.BoxHelper(sssoundObj, 0xffff00);
+        // scene.add(geoHelper);
 
         sssoundObj.add(newSound);
         scene.add(loight);
@@ -546,17 +585,20 @@ function scoreLoop() {
     scoreTimeout = setTimeout(scoreLoop, interval2);
 
     //"Game over" conditions
-    if (score <= -100) {
-        score = -100;
+    if (score <= 0 || scene_objects.length == 9) {
+        score = 0;
         updateScoreDisplay();
 
         controls.enabled = false;
 
         scene_objects.forEach(obj => {
             obj.sound.setVolume(0.4);
-        })
+        });
 
         end();
+        } else if (score > 100) {
+            score = 100;
+            updateScoreDisplay();
         };
 }
 
@@ -626,7 +668,7 @@ function refresh() {
     };
 
     animate();
-    resetAnimation();
+    transAnimation();
     introMech();
 }
 
@@ -645,6 +687,7 @@ function onMouseClick(event){
             if (idx !== -1){
                 const wasIntro = !!scene_objects[idx].isIntro;
                 score += Math.max(5, 15 - scene_objects[idx].timeActive);
+                if (score > 100) score = 100;
                 updateScoreDisplay();
 
                 if (scene_objects[idx].createdObj === objects[0]) {
