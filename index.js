@@ -613,7 +613,7 @@ function end() {
         gameOverDiv.style.transform = 'translate(-50%, -50%)';
         gameOverDiv.style.fontSize = '4em';
         gameOverDiv.style.color = '#D3D3D3';
-        gameOverDiv.style.background = 'rgba(0,0,0,0.4)';
+        gameOverDiv.style.background = 'rgba(6, 37, 63, 0.4)';
         gameOverDiv.style.padding = '0.5em 1em';
         gameOverDiv.style.borderRadius = '5px';
         gameOverDiv.style.zIndex = '10000';
@@ -628,7 +628,6 @@ function end() {
         restartBtn.style.cursor = 'pointer';
         restartBtn.onclick = refresh;
 
-        // Insert button at the top
         gameOverDiv.insertBefore(restartBtn, gameOverDiv.firstChild);
 
         document.body.appendChild(gameOverDiv);
