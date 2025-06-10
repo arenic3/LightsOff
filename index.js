@@ -538,8 +538,8 @@ function gameMech() {
         newSound.setDirectionalCone(obj.dir, obj.dir2, 0.1);
 
         //Debugging tool
-        // const posSoundHelper = new PositionalAudioHelper( newSound, 1 );
-        // newSound.add( posSoundHelper );
+        const posSoundHelper = new PositionalAudioHelper( newSound, 1 );
+        newSound.add( posSoundHelper );
 
         // const geoHelper = new THREE.BoxHelper(sssoundObj, 0xffff00);
         // scene.add(geoHelper);
