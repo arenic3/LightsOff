@@ -84,7 +84,7 @@ document.getElementById('startButton').addEventListener('click', ()=> {
     scoreDiv.style.right = '40px';
     scoreDiv.style.fontFamily = 'Monaco'
     scoreDiv.style.fontSize = '2em';
-    scoreDiv.style.color = '#D3D3D3';
+    scoreDiv.style.color = '#D3D3D3D3';
     scoreDiv.style.zIndex = '9999';
     scoreDiv.innerText = `${score}`;
     document.body.appendChild(scoreDiv);
@@ -612,8 +612,9 @@ function end() {
         gameOverDiv.style.left = '50%';
         gameOverDiv.style.transform = 'translate(-50%, -50%)';
         gameOverDiv.style.fontSize = '4em';
-        gameOverDiv.style.color = '#D3D3D3';
-        gameOverDiv.style.background = 'rgba(6, 37, 63, 0.4)';
+        gameOverDiv.style.fontFamily = 'Lucida Console, monospace';
+        gameOverDiv.style.color = '#D3D3D3D3';
+        gameOverDiv.style.background = 'rgba(46, 47, 48, 0.4)';
         gameOverDiv.style.padding = '0.5em 1em';
         gameOverDiv.style.borderRadius = '5px';
         gameOverDiv.style.zIndex = '10000';
@@ -621,9 +622,11 @@ function end() {
 
         const restartBtn = document.createElement('button');
         restartBtn.innerText = 'Restart';
+        restartBtn.cursor = 'pointer';
         restartBtn.style.display = 'block';
         restartBtn.style.margin = '0 auto 1em auto';
         restartBtn.style.fontSize = '0.5em';
+        restartBtn.style.fontFamily = 'Lucida Console, monospace';
         restartBtn.style.padding = '0.5em 1em';
         restartBtn.style.cursor = 'pointer';
         restartBtn.onclick = refresh;
