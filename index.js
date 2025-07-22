@@ -22,7 +22,7 @@ import gsap from'gsap';
 
 
 //Global variables, helpers are for debugging feel free to add them back into the scene
-let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisHelper, audioLoader, listener, newSound, videoTex, videoGeom, videoMat, videoObj;
+let camera, scene, renderer, controls, spotLight, spotTarget, lightHelper, axisHelper, audioLoader, listener, newSound, endSound, videoTex, videoGeom, videoMat, videoObj;
 let mesh, mesh2;
 let loopInterval = null;
 let interval = 5000;
@@ -31,6 +31,7 @@ const minInterval = 500;
 const ramp = 0.95;
 let score = 100;
 let scoreTimeout = null;
+let voicePlayed = false;
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -50,6 +51,13 @@ let objects = [
     {x: -0.55, y: -2.5, z: -2.5, rot: 0, dir: 135, dir2: 200, scale: 2, col: "red", sound: 'assets/WASHER.mp3', created: false},
     {x: -2.5, y: -0.3, z: -0.65, rot: 4.8, dir: 135, dir2: 180, scale: 1, col: "grey", sound: 'assets/LIGHT.mp3', created: false},
     {x: -2.6, y: -0.3, z: 2.1, rot: 5, dir: 155, dir2: 210, scale: 2, col: "grey", sound: 'assets/LIGHT.mp3', created: false},
+];
+
+let voiceLines = [
+    {line: 'assets/Aanya_vm.mp3'},
+    {line: 'assets/Beau_vm.mp3'},
+    {line: 'assets/Miles_vm.mp3'},
+    {line: 'assets/Nicole_vm.mp3'}
 ];
 
 //Second array to be populated with active objects
@@ -84,7 +92,7 @@ document.getElementById('startButton').addEventListener('click', ()=> {
     scoreDiv.style.right = '40px';
     scoreDiv.style.fontFamily = 'Monaco'
     scoreDiv.style.fontSize = '2em';
-    scoreDiv.style.color = '#D3D3D3D3';
+    scoreDiv.style.color = '#757575';
     scoreDiv.style.zIndex = '9999';
     scoreDiv.innerText = `${score}`;
     document.body.appendChild(scoreDiv);
@@ -97,10 +105,8 @@ document.getElementById('startButton').addEventListener('click', ()=> {
 //Score display, red if negative & green if pos.
 function updateScoreDisplay() {
     scoreDiv.innerText = `${score}`;
-    if(score > 50){
-        scoreDiv.style.color = '#D3D3D3';
-    } else if(score < 50){
-        scoreDiv.style.color = '#FF0000';
+    if(score < 50){
+        scoreDiv.style.color = '#ba0000';
     };
 }
 
@@ -538,8 +544,8 @@ function gameMech() {
         newSound.setDirectionalCone(obj.dir, obj.dir2, 0.1);
 
         //Debugging tool
-        const posSoundHelper = new PositionalAudioHelper( newSound, 1 );
-        newSound.add( posSoundHelper );
+        // const posSoundHelper = new PositionalAudioHelper( newSound, 1 );
+        // newSound.add( posSoundHelper );
 
         // const geoHelper = new THREE.BoxHelper(sssoundObj, 0xffff00);
         // scene.add(geoHelper);
@@ -590,6 +596,7 @@ function scoreLoop() {
         updateScoreDisplay();
 
         controls.enabled = false;
+        controls.autoRotate = true;
 
         scene_objects.forEach(obj => {
             obj.sound.setVolume(0.4);
@@ -613,10 +620,10 @@ function end() {
         gameOverDiv.style.transform = 'translate(-50%, -50%)';
         gameOverDiv.style.fontSize = '4em';
         gameOverDiv.style.fontFamily = 'Lucida Console, monospace';
-        gameOverDiv.style.color = '#D3D3D3D3';
-        gameOverDiv.style.background = 'rgba(46, 47, 48, 0.4)';
+        gameOverDiv.style.color = '#c7c7c7';
+        gameOverDiv.style.background = 'radial-gradient(circle,rgba(171, 161, 17, 0.8) 0%, rgba(112, 110, 39, 0.65) 14%, rgba(0, 0, 0, 0.5) 71%)';
         gameOverDiv.style.padding = '0.5em 1em';
-        gameOverDiv.style.borderRadius = '5px';
+        gameOverDiv.style.borderRadius = '10px';
         gameOverDiv.style.zIndex = '10000';
         gameOverDiv.innerText = 'YOU FAILED';
 
@@ -624,24 +631,51 @@ function end() {
         restartBtn.innerText = 'Restart';
         restartBtn.cursor = 'pointer';
         restartBtn.style.display = 'block';
-        restartBtn.style.margin = '0 auto 1em auto';
+        restartBtn.style.margin = '0.5em auto 0 auto';
         restartBtn.style.fontSize = '0.5em';
+        restartBtn.style.background = 'rgba(103, 101, 76, 0.6)';
+        restartBtn.onmouseover = () => {
+            restartBtn.style.background = 'rgba(200, 180, 60, 0.8)';
+        };
+        restartBtn.onmouseout = () => {
+        restartBtn.style.background = 'rgba(103, 101, 76, 0.6)';
+        };
+        restartBtn.style.border = 'none';
         restartBtn.style.fontFamily = 'Lucida Console, monospace';
         restartBtn.style.padding = '0.5em 1em';
         restartBtn.style.cursor = 'pointer';
         restartBtn.onclick = refresh;
 
-        gameOverDiv.insertBefore(restartBtn, gameOverDiv.firstChild);
+        gameOverDiv.appendChild(restartBtn);
 
         document.body.appendChild(gameOverDiv);
+
+        voicePlayed = false;
     } else {
         gameOverDiv.style.display = 'block';
+
+        if(!voicePlayed){
+            endSound = new THREE.Audio(listener);
+            const randomVoice = voiceLines[Math.floor(Math.random() * voiceLines.length)];
+
+            audioLoader.load(randomVoice.line, function(buffer) {
+                endSound.setBuffer(buffer);
+                endSound.setLoop(false);
+                endSound.setVolume(0.3);
+                endSound.play();   
+            });
+            voicePlayed = true;
+        }
     }
 }
 
 function refresh() {
 
+    voicePlayed = false;
+    controls.autoRotate = false;
     controls.enabled = true;
+
+    endSound.stop();
 
     scene_objects.forEach(obj => {
         scene.remove(obj.obj);
@@ -652,11 +686,13 @@ function refresh() {
 
     scene_objects = [];
 
-    score = 0;
+    score = 100;
     updateScoreDisplay();
 
     if(loopInterval) clearTimeout(loopInterval);
     if(scoreTimeout) clearTimeout(scoreTimeout);
+    scoreTimeout = null;
+
     interval = 5000;
     interval2 = 1000;
 
@@ -669,7 +705,6 @@ function refresh() {
         video.currentTime = 0;
     };
 
-    animate();
     transAnimation();
     introMech();
 }

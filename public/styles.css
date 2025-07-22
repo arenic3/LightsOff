@@ -21,14 +21,14 @@ body.on #heading {
   transition: background-color 0.5s ease;
 }
   
-body.on #startButton {
+body.on #startButton {  
   pointer-events: auto;
   --c: #000;
   background: linear-gradient(90deg, #0000 33%, #0005, #0000 67%) var(--_p,100%)/300% no-repeat,
   #e0e0e0;
   color: #464141;
   transition: background 0.5s ease, color 0.5s ease;
-}
+} 
 
 body.on h1 {
   color: rgb(206, 191, 90);
