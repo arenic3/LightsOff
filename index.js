@@ -228,7 +228,7 @@ function initControls() {
 //and one for the exterior which fades the closer the camera gets
 function initMesh() {
     const loader = new GLTFLoader();
-    loader.load('assets/models/untitled.glb', (gltf) => {
+    loader.load('assets/models/interior.glb', (gltf) => {
         mesh = gltf.scene.children[0];
         console.log(gltf.scene.children);
         mesh.position.set(0, -3, 0);
